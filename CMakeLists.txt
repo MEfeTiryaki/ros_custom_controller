@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ros_controller_base)
+project(ros_custom_controller_base)
 
 add_definitions("-std=c++11")
 

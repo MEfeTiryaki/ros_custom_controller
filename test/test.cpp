@@ -1,20 +1,20 @@
 #include "ros/ros.h"
 #include <iostream>
-#include "ros_controller_base/ModelPredictiveController/DeltaInputFormulationBase.hpp"
-#include "ros_controller_base/ModelPredictiveController/TrajectoryTrackingBase.hpp"
-#include "ros_controller_base/RobotContainer/RobotModuleContainerBase.hpp"
-#include "ros_controller_base/State.h"
+#include "ros_custom_controller_base/ModelPredictiveController/DeltaInputFormulationBase.hpp"
+#include "ros_custom_controller_base/ModelPredictiveController/TrajectoryTrackingBase.hpp"
+#include "ros_custom_controller_base/RobotContainer/RobotModuleContainerBase.hpp"
+#include "ros_custom_controller_base/State.h"
 
 
 void testTrajectoryTracking(ros::NodeHandle* nh)
 {
-  robot::RobotModuleContainerBase<ros_controller_base::State>* robot_ =
-      new robot::RobotModuleContainerBase<ros_controller_base::State>();
+  robot::RobotModuleContainerBase<ros_custom_controller_base::State>* robot_ =
+      new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::TrajectoryTrackingBase<robot::RobotModuleContainerBase<ros_controller_base::State>>* controller_ =
+  controller::TrajectoryTrackingBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::TrajectoryTrackingBase<
-          robot::RobotModuleContainerBase<ros_controller_base::State>>();
+          robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
 
   Eigen::MatrixXd P = Eigen::MatrixXd(1, 1);
@@ -72,13 +72,13 @@ void testTrajectoryTracking(ros::NodeHandle* nh)
 
 void testDeltaFormulation(ros::NodeHandle* nh)
 {
-  robot::RobotModuleContainerBase<ros_controller_base::State>* robot_ =
-      new robot::RobotModuleContainerBase<ros_controller_base::State>();
+  robot::RobotModuleContainerBase<ros_custom_controller_base::State>* robot_ =
+      new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::DeltaInputFormulationBase<robot::RobotModuleContainerBase<ros_controller_base::State>>* controller_ =
+  controller::DeltaInputFormulationBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::DeltaInputFormulationBase<
-          robot::RobotModuleContainerBase<ros_controller_base::State>>();
+          robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
 
   Eigen::MatrixXd P = Eigen::MatrixXd(1, 1);
@@ -135,13 +135,13 @@ void testDeltaFormulation(ros::NodeHandle* nh)
 
 void testMPC(ros::NodeHandle* nh)
 {
-  robot::RobotModuleContainerBase<ros_controller_base::State>* robot_ =
-      new robot::RobotModuleContainerBase<ros_controller_base::State>();
+  robot::RobotModuleContainerBase<ros_custom_controller_base::State>* robot_ =
+      new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::ModelPredictiveControllerBase<robot::RobotModuleContainerBase<ros_controller_base::State>>* controller_ =
+  controller::ModelPredictiveControllerBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::ModelPredictiveControllerBase<
-          robot::RobotModuleContainerBase<ros_controller_base::State>>();
+          robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
 
   Eigen::MatrixXd P = Eigen::MatrixXd(1, 1);
@@ -203,4 +203,3 @@ int main(int argc, char **argv)
   //testMPC(nh);
   return 0;
 }
-

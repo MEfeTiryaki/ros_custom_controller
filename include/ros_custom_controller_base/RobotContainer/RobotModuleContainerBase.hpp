@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ros_controller_base/RobotContainer/RobotContainerBase.hpp"
+#include "ros_custom_controller_base/RobotContainer/RobotContainerBase.hpp"
 
 #include <ros/ros.h>
 #include <boost/thread.hpp>
@@ -11,7 +11,7 @@
 #include <ctime>
 #include <Eigen/Dense>
 
-#include "ros_controller_base/Input.h"
+#include "ros_custom_controller_base/Input.h"
 
 namespace robot {
 struct TrajectoryPoint
@@ -40,7 +40,7 @@ class RobotModuleContainerBase : public RobotContainerBase
 
   virtual void create() override
   {
-    input_ = ros_controller_base::Input();
+    input_ = ros_custom_controller_base::Input();
   }
 
   virtual void initilize(ros::NodeHandle* nodeHandle)
@@ -242,7 +242,7 @@ class RobotModuleContainerBase : public RobotContainerBase
   std::vector<Eigen::VectorXd> x_trajectory_;
   std::vector<TrajectoryPoint> trajectoryBuffer_;
 
-  ros_controller_base::Input input_;
+  ros_custom_controller_base::Input input_;
 
   ros::Publisher commandPublisher_;
   std::string commandPublisherName_;

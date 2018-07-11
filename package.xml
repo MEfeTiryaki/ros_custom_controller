@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_controller_base</name>
+  <name>ros_custom_controller_base</name>
   <version>0.0.0</version>
   <description>This package...</description>
 
