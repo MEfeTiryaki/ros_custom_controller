@@ -15,7 +15,8 @@ class RobotContainerBase
 {
  public:
   RobotContainerBase()
-      : dt_(0.0)
+      : dt_(0.0),
+      isSimulation_(true)
   {
     ns_ = ros::this_node::getNamespace();
     ns_.erase(0, 1);
@@ -40,6 +41,10 @@ class RobotContainerBase
 
   virtual void readParameters()
   {
+    nodeHandle_->getParam(ns_ + "/controller/simulation", isSimulation_);
+    if(!isSimulation_){
+      std::cerr<<"controller is running on real robot"<<std::endl;
+    }
   }
   ;
 
@@ -74,6 +79,8 @@ class RobotContainerBase
 
   std::string ns_;
   ros::NodeHandle* nodeHandle_;
+
+  bool isSimulation_;
 
   std::mutex mutex_;
   double dt_;

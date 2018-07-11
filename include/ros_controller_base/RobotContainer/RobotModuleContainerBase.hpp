@@ -11,7 +11,6 @@
 #include <ctime>
 #include <Eigen/Dense>
 
-
 #include "ros_controller_base/Input.h"
 
 namespace robot {
@@ -110,11 +109,20 @@ class RobotModuleContainerBase : public RobotContainerBase
     return n_;
   }
 
+  void setN(int n)
+  {
+    n_ = n;
+  }
+
   int getM()
   {
     return m_;
   }
 
+  void setM(int m)
+  {
+    m_ = m;
+  }
   void setTrajectoryLength(int length)
   {
     trajectoryLength_ = length;
@@ -177,13 +185,15 @@ class RobotModuleContainerBase : public RobotContainerBase
     if (!isBufferEmpty()) {
       TrajectoryPoint& next = trajectoryBuffer_[0];
       if (next.timeLeft > 0.0) {
-        nextTrajectoryPoint = x_trajectory_.back() + (next.point - x_trajectory_.back()) * dt_ / next.timeLeft;
+        nextTrajectoryPoint = x_trajectory_.back()
+            + (next.point - x_trajectory_.back()) * dt_ / next.timeLeft;
         next.timeLeft -= dt_;
       } else {
         trajectoryBuffer_.erase(trajectoryBuffer_.begin());
         if (!isBufferEmpty()) {
           next = trajectoryBuffer_[0];
-          nextTrajectoryPoint = x_trajectory_.back() + (next.point - x_trajectory_.back()) * dt_ / next.timeLeft;
+          nextTrajectoryPoint = x_trajectory_.back()
+              + (next.point - x_trajectory_.back()) * dt_ / next.timeLeft;
           next.timeLeft -= dt_;
         } else {
           nextTrajectoryPoint = x_trajectory_.back();

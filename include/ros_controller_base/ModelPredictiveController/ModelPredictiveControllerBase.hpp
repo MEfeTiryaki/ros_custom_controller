@@ -5,16 +5,15 @@
 #include <ctime>
 
 #include <Eigen/Core>
-#include "ooqp_eigen_interface/QuadraticProblemFormulation.hpp"
 #include "ooqp_eigen_interface/OoqpEigenInterface.hpp"
 
 namespace controller {
 
 template<typename Robot>
-class MPC_Base : public ControllerBase<Robot>
+class ModelPredictiveControllerBase : public ControllerBase<Robot>
 {
  public:
-  MPC_Base()
+  ModelPredictiveControllerBase()
       : ControllerBase<Robot>(),
         horizonLength_(2),
         time_stop_(0.0),
@@ -25,7 +24,7 @@ class MPC_Base : public ControllerBase<Robot>
   }
   ;
 
-  virtual ~MPC_Base()
+  virtual ~ModelPredictiveControllerBase()
   {
   }
   ;
@@ -34,9 +33,11 @@ class MPC_Base : public ControllerBase<Robot>
   {
     ControllerBase<Robot>::create(r);
     horizonLength_ = 0;
+
     // State Vectors
     A_ = Eigen::MatrixXd::Zero(this->robot_->getN(), this->robot_->getN());
     B_ = Eigen::MatrixXd::Zero(this->robot_->getN(), this->robot_->getM());
+
     // state constrains matrix and vector (A_*x<=b)
     A_x_ = Eigen::MatrixXd();
     b_x_ = Eigen::VectorXd();
@@ -54,7 +55,6 @@ class MPC_Base : public ControllerBase<Robot>
   virtual void initilize(ros::NodeHandle* nodeHandle) override
   {
     ControllerBase<Robot>::initilize(nodeHandle);
-
   }
 
   virtual void readParameters() override
@@ -103,15 +103,7 @@ class MPC_Base : public ControllerBase<Robot>
     }
 
     //
-    Q_ = Eigen::MatrixXd::Identity(n * (N + 1), n * (N + 1));
-
-    R_ = Eigen::MatrixXd::Identity(m * N, m * N);
-
-    for (int i = 0; i < N; i++) {
-      Q_.block(i * n, i * n, n, n) = Q;
-      R_.block(i * m, i * m, m, m) = R;
-    }
-    Q_.block(N * n, N * n, n, n) = P;
+    setCostMatrices(P, Q, R);
 
     if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/b_x")) {
       std::vector<double> value;
@@ -180,8 +172,6 @@ class MPC_Base : public ControllerBase<Robot>
     //std::cerr << b_u_.transpose() << std::endl;
     //std::cerr << A_u_ << std::endl;
 
-
-
   }
   ;
 
@@ -194,14 +184,29 @@ class MPC_Base : public ControllerBase<Robot>
     setCommand();
     //time_stop_ = clock();
     //time_stop_ros_ = ros::Time::now().toSec();
-    //std::cout << "dt : " <<this->dt_<<" sec" << std::endl;
-    //std::cout << "Time: " << (time_stop_-time_start_)/double(CLOCKS_PER_SEC) << " sec "<< std::endl;
-    //std::cout << "Rime: " << time_stop_ros_-time_start_ros_<<" sec" <<std::endl;
-    //std::cout << "_____________" ;
+    //std::cout << "dt : " << this->dt_ << " sec" << std::endl;
+    //std::cout << "Time: " << (time_stop_ - time_start_) / double(CLOCKS_PER_SEC) << " sec "
+    //          << std::endl;
+    // std::cout << "Rime: " << time_stop_ros_ - time_start_ros_ << " sec" << std::endl;
+    //std::cout << "____________\n";
     //time_start_ = clock();
     //time_start_ros_ = ros::Time::now().toSec();
   }
 
+  virtual void setCostMatrices(Eigen::MatrixXd P, Eigen::MatrixXd Q, Eigen::MatrixXd R)
+    {
+      int n = P.cols();
+      int m = R.cols();
+      Q_ = Eigen::MatrixXd::Identity(n * (horizonLength_ + 1), n * (horizonLength_ + 1));
+
+      R_ = Eigen::MatrixXd::Identity(m * horizonLength_, m * horizonLength_);
+
+      for (int i = 0; i < horizonLength_; i++) {
+        Q_.block(i * n, i * n, n, n) = Q;
+        R_.block(i * m, i * m, m, m) = R;
+      }
+      Q_.block(horizonLength_ * n, horizonLength_ * n, n, n) = P;
+    }
  protected:
 
   virtual void initilizeCostMatrixes()
@@ -210,13 +215,13 @@ class MPC_Base : public ControllerBase<Robot>
     int n_u = b_u_.size();
     int n_f = b_f_.size();
     int N = horizonLength_;
-    int n = this->robot_->getState().size();
-    int m = this->robot_->getInput().size();
+    int n = this->robot_->getN();
+    int m = this->robot_->getM();
 
-    Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(n , n);
+    Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(n, n);
 
-    Eigen::MatrixXd S_x = Eigen::MatrixXd::Zero(n * (N + 1), n);
-    Eigen::MatrixXd S_u = Eigen::MatrixXd::Zero(n * (N + 1), m * N);
+    S_x_ = Eigen::MatrixXd::Zero(n * (N + 1), n);
+    S_u_ = Eigen::MatrixXd::Zero(n * (N + 1), m * N);
     Eigen::MatrixXd G_upper = Eigen::MatrixXd::Zero(n_u * N, m * N);
     Eigen::MatrixXd E_upper = Eigen::MatrixXd::Zero(n_u * N, n);
     Eigen::VectorXd w_upper = Eigen::VectorXd::Zero(n_u * N);
@@ -224,26 +229,28 @@ class MPC_Base : public ControllerBase<Robot>
     Eigen::MatrixXd E_lower = Eigen::MatrixXd::Zero(n_x * N + n_f, n);
     Eigen::VectorXd w_lower = Eigen::VectorXd::Zero(n_x * N + n_f);
 
-    // S_X and S_U
-    S_x.block(0, 0, n, n) = Eigen::MatrixXd::Identity(n, n);
-    for (int i = 1; i < N+1; i++) {
+    // S_X and S_u_
+    S_x_.block(0, 0, n, n) = Eigen::MatrixXd::Identity(n, n);
+    for (int i = 1; i < N + 1; i++) {
       // Matrix power
       temp = A_;
-      for (int j = 1; j < i ; j++) {
-      temp = A_*temp;
+      for (int j = 1; j < i; j++) {
+        temp = A_ * temp;
       }
-      S_x.block(i* n, 0, n, n) = temp;
+      S_x_.block(i * n, 0, n, n) = temp;
     }
 
-    for (int i = 2; i < N + 1; i++) {
-      for (int j = 0; j < i; j++) {
+    for (int i = 1; i < N + 1; i++) {
+      for (int j = 0; j < i-1; j++) {
         // Matrix power
-        temp  = A_;
+        temp = A_;
         for (int k = 1; k < i - j - 1; k++) {
-          temp = A_*temp;
+          temp = A_ * temp;
         }
-        S_u.block(i * n, j * m, n, m) = temp * B_;
+        S_u_.block(i * n, j * m, n, m) = temp * B_;
       }
+
+      S_u_.block(i * n, i - 1 * m, n, m) = this->B_;
     }
 
     // UPPER PART OF Constrains
@@ -253,21 +260,21 @@ class MPC_Base : public ControllerBase<Robot>
     }
     // LOWER PART OF CONSTRAINS
     w_lower.segment(0, n_x) = b_x_;
-    E_lower.block(0, 0, n_x, n) = -A_x_ ;
+    E_lower.block(0, 0, n_x, n) = -A_x_;
     for (int i = 1; i < N; i++) {
       for (int j = 0; j < i; j++) {
-        G_lower.block(i * n_x, j * m, n_x, m) = A_x_ * S_u.block(i * n, j * m, n, m);
+        G_lower.block(i * n_x, j * m, n_x, m) = A_x_ * S_u_.block(i * n, j * m, n, m);
       }
-      E_lower.block(i * n_x, 0, n_x, n) = -A_x_ * S_x.block(i * n, 0, n, n);
+      E_lower.block(i * n_x, 0, n_x, n) = -A_x_ * S_x_.block(i * n, 0, n, n);
       w_lower.segment(i * n_x, n_x) = b_x_;
     }
-    for (int j = 0; j < N ; j++) {
-      G_lower.block(N * n_x, j * m, n_f, m) = A_f_ * S_u.block(N * n, j * m, n, m);
+    for (int j = 0; j < N; j++) {
+      G_lower.block(N * n_x, j * m, n_f, m) = A_f_ * S_u_.block(N * n, j * m, n, m);
     }
-    E_lower.block(N * n_x, 0, n_f, E_lower.cols()) = -A_f_ * S_x.block(N * n, 0, n, S_x.cols());
+    E_lower.block(N * n_x, 0, n_f, E_lower.cols()) = -A_f_ * S_x_.block(N * n, 0, n, S_x_.cols());
     w_lower.segment(N * n_x, n_x) = b_f_;
 
-    Eigen::MatrixXd H = S_u.transpose() * Q_ * S_u + R_;
+    Eigen::MatrixXd H = S_u_.transpose() * Q_ * S_u_ + R_;
     // Concatenate
     G_.resize(G_upper.rows() + G_lower.rows(), G_upper.cols());
     H_.resize(H.rows(), H.cols());
@@ -284,17 +291,18 @@ class MPC_Base : public ControllerBase<Robot>
     //W_.segment(w_upper.size(), w_lower.size()) << w_lower;
     W_ << w_upper, w_lower;
     H_ = H.sparseView();
-    F_ = S_x.transpose() * Q_ * S_u;
+    F_ = S_x_.transpose() * Q_ * S_u_;
 
-    /*
-    std::cerr << "Sx\n" << S_x << std::endl;
-    std::cerr << "SU\n" << S_u << std::endl;
-    std::cerr << "G_\n" << G_ << std::endl;
-    std::cerr << "H_\n" << H_ << std::endl;
-    std::cerr << "E_\n" << E_ << std::endl;
-    std::cerr << "W_\n" << W_ << std::endl;
-    std::cerr << "F_\n" << F_ << std::endl;
-    */
+    //*
+    //std::cerr << "Sx\n" << S_x_ << std::endl;
+    //std::cerr << "SU\n" << S_u_ << std::endl;
+
+    //std::cerr << "G_\n" << G_ << std::endl;
+    // std::cerr << "H_\n" << H_ << std::endl;
+    // std::cerr << "E_\n" << E_ << std::endl;
+    //std::cerr << "W_\n" << W_ << std::endl;
+    //std::cerr << "F_\n" << F_ << std::endl;
+    //*/
   }
 
   ;
@@ -324,6 +332,70 @@ class MPC_Base : public ControllerBase<Robot>
     this->robot_->setInput(solution_.segment(0, this->robot_->getM()));
   }
   ;
+ public:
+  Eigen::MatrixXd getH()
+  {
+    return this->H_;
+  }
+  Eigen::MatrixXd getG()
+  {
+    return this->G_;
+  }
+  Eigen::MatrixXd getE()
+  {
+    return this->E_;
+  }
+  Eigen::VectorXd getW()
+  {
+    return this->W_;
+  }
+  Eigen::MatrixXd getF()
+  {
+    return this->F_;
+  }
+
+  void setHorizonLength(double N)
+  {
+    this->horizonLength_ = N;
+  }
+  void setA(Eigen::MatrixXd A)
+  {
+    this->A_ = A;
+  }
+  void setB(Eigen::MatrixXd B)
+  {
+    this->B_ = B;
+  }
+  void setAx(Eigen::MatrixXd A)
+  {
+    this->A_x_ = A;
+  }
+  void setBx(Eigen::MatrixXd B)
+  {
+    this->b_x_ = B;
+  }
+  void setAu(Eigen::MatrixXd A)
+  {
+    this->A_u_ = A;
+  }
+  void setBu(Eigen::MatrixXd B)
+  {
+    this->b_u_ = B;
+  }
+  void setAf(Eigen::MatrixXd A)
+  {
+    this->A_f_ = A;
+  }
+  void setBf(Eigen::MatrixXd B)
+  {
+    this->b_f_ = B;
+  }
+  void test()
+  {
+    initilizeCostMatrixes();
+  }
+
+ protected:
 
   int horizonLength_;
 
@@ -353,6 +425,8 @@ class MPC_Base : public ControllerBase<Robot>
   Eigen::SparseMatrix<double, Eigen::RowMajor> H_;
 //Eigen::MatrixXd H_;
   Eigen::MatrixXd F_;
+  Eigen::MatrixXd S_x_;
+  Eigen::MatrixXd S_u_;
 
 // optimization variables
   Eigen::VectorXd q_;
