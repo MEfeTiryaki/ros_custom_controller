@@ -73,7 +73,6 @@ class ControllerBase
       std::cerr<<"controller is running on real robot"<<std::endl;
     }
     nodeHandle_->getParam(ns_ + "/controller/rate", controllerRate_);
-    std::cerr<<"controller rate : "<<controllerRate_ << std::endl;
     dt_ = 1.0 / controllerRate_;
   }
   ;

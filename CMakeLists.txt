@@ -7,7 +7,7 @@ find_package(catkin REQUIRED
   COMPONENTS
     message_generation
     std_msgs
-    ros_node_base
+    ros_node_utils
     roscpp
     ooqp_eigen_interface
 )
@@ -32,7 +32,7 @@ catkin_package(
 	LIBRARIES
 	CATKIN_DEPENDS
 	  roscpp
-	  ros_node_base
+	  ros_node_utils
 	  message_generation
 	  std_msgs
 	  ooqp_eigen_interface
