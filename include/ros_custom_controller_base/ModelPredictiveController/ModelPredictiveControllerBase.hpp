@@ -194,19 +194,19 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   }
 
   virtual void setCostMatrices(Eigen::MatrixXd P, Eigen::MatrixXd Q, Eigen::MatrixXd R)
-    {
-      int n = P.cols();
-      int m = R.cols();
-      Q_ = Eigen::MatrixXd::Identity(n * (horizonLength_ + 1), n * (horizonLength_ + 1));
+  {
+    int n = P.cols();
+    int m = R.cols();
+    Q_ = Eigen::MatrixXd::Identity(n * horizonLength_, n * horizonLength_);
 
-      R_ = Eigen::MatrixXd::Identity(m * horizonLength_, m * horizonLength_);
+    R_ = Eigen::MatrixXd::Identity(m * horizonLength_, m * horizonLength_);
 
-      for (int i = 0; i < horizonLength_; i++) {
-        Q_.block(i * n, i * n, n, n) = Q;
-        R_.block(i * m, i * m, m, m) = R;
-      }
-      Q_.block(horizonLength_ * n, horizonLength_ * n, n, n) = P;
+    for (int i = 0; i < horizonLength_; i++) {
+      Q_.block(i * n, i * n, n, n) = Q;
+      R_.block(i * m, i * m, m, m) = R;
     }
+    Q_.block(horizonLength_ - 1 * n, horizonLength_ - 1 * n, n, n) = P;
+  }
  protected:
 
   virtual void initilizeCostMatrixes()
@@ -220,18 +220,17 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
 
     Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(n, n);
 
-    S_x_ = Eigen::MatrixXd::Zero(n * (N + 1), n);
-    S_u_ = Eigen::MatrixXd::Zero(n * (N + 1), m * N);
+    S_x_ = Eigen::MatrixXd::Zero(n * N, n);
+    S_u_ = Eigen::MatrixXd::Zero(n * N, m * N);
     Eigen::MatrixXd G_upper = Eigen::MatrixXd::Zero(n_u * N, m * N);
     Eigen::MatrixXd E_upper = Eigen::MatrixXd::Zero(n_u * N, n);
     Eigen::VectorXd w_upper = Eigen::VectorXd::Zero(n_u * N);
-    Eigen::MatrixXd G_lower = Eigen::MatrixXd::Zero(n_x * N + n_f, m * N);
-    Eigen::MatrixXd E_lower = Eigen::MatrixXd::Zero(n_x * N + n_f, n);
-    Eigen::VectorXd w_lower = Eigen::VectorXd::Zero(n_x * N + n_f);
+    Eigen::MatrixXd G_lower = Eigen::MatrixXd::Zero(n_x * (N - 1) + n_f, m * N);
+    Eigen::MatrixXd E_lower = Eigen::MatrixXd::Zero(n_x * (N - 1) + n_f, n);
+    Eigen::VectorXd w_lower = Eigen::VectorXd::Zero(n_x * (N - 1) + n_f);
 
     // S_X and S_u_
-    S_x_.block(0, 0, n, n) = Eigen::MatrixXd::Identity(n, n);
-    for (int i = 1; i < N + 1; i++) {
+    for (int i = 0; i < N; i++) {
       // Matrix power
       temp = A_;
       for (int j = 1; j < i; j++) {
@@ -240,8 +239,8 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       S_x_.block(i * n, 0, n, n) = temp;
     }
 
-    for (int i = 1; i < N + 1; i++) {
-      for (int j = 0; j < i-1; j++) {
+    for (int i = 0; i < N; i++) {
+      for (int j = 0; j < i; j++) {
         // Matrix power
         temp = A_;
         for (int k = 1; k < i - j - 1; k++) {
@@ -250,7 +249,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
         S_u_.block(i * n, j * m, n, m) = temp * B_;
       }
 
-      S_u_.block(i * n, i - 1 * m, n, m) = this->B_;
+      S_u_.block(i * n, i * m, n, m) = this->B_;
     }
 
     // UPPER PART OF Constrains
@@ -258,10 +257,9 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       G_upper.block(i * n_u, i * m, n_u, m) = A_u_;
       w_upper.segment(i * n_u, n_u) = b_u_;
     }
+
     // LOWER PART OF CONSTRAINS
-    w_lower.segment(0, n_x) = b_x_;
-    E_lower.block(0, 0, n_x, n) = -A_x_;
-    for (int i = 1; i < N; i++) {
+    for (int i = 0; i < N; i++) {
       for (int j = 0; j < i; j++) {
         G_lower.block(i * n_x, j * m, n_x, m) = A_x_ * S_u_.block(i * n, j * m, n, m);
       }
@@ -269,10 +267,11 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       w_lower.segment(i * n_x, n_x) = b_x_;
     }
     for (int j = 0; j < N; j++) {
-      G_lower.block(N * n_x, j * m, n_f, m) = A_f_ * S_u_.block(N * n, j * m, n, m);
+      G_lower.block((N - 1) * n_x, j * m, n_f, m) = A_f_ * S_u_.block((N - 1) * n, j * m, n, m);
     }
-    E_lower.block(N * n_x, 0, n_f, E_lower.cols()) = -A_f_ * S_x_.block(N * n, 0, n, S_x_.cols());
-    w_lower.segment(N * n_x, n_x) = b_f_;
+    E_lower.block((N - 1) * n_x, 0, n_f, E_lower.cols()) = -A_f_
+        * S_x_.block((N - 1) * n, 0, n, S_x_.cols());
+    w_lower.segment((N - 1) * n_x, n_x) = b_f_;
 
     Eigen::MatrixXd H = S_u_.transpose() * Q_ * S_u_ + R_;
     // Concatenate
@@ -281,7 +280,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     G_.topRows(G_upper.rows()) = G_upper.sparseView();
     G_.bottomRows(G_lower.rows()) = G_lower.sparseView();
 
-    E_ = Eigen::MatrixXd::Zero(n_u * N + n_x * N + n_f, n);
+    E_ = Eigen::MatrixXd::Zero(n_u * N + n_x * (N - 1) + n_f, n);
     W_ = Eigen::VectorXd::Zero(w_upper.size() + w_lower.size());
 
     E_.block(0, 0, E_upper.rows(), E_upper.cols()) = E_upper;
@@ -293,16 +292,16 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     H_ = H.sparseView();
     F_ = S_x_.transpose() * Q_ * S_u_;
 
-    //*
-    //std::cerr << "Sx\n" << S_x_ << std::endl;
-    //std::cerr << "SU\n" << S_u_ << std::endl;
+    /*
+     std::cerr << "Sx\n" << S_x_ << std::endl;
+     std::cerr << "SU\n" << S_u_ << std::endl;
 
-    //std::cerr << "G_\n" << G_ << std::endl;
-    // std::cerr << "H_\n" << H_ << std::endl;
-    // std::cerr << "E_\n" << E_ << std::endl;
-    //std::cerr << "W_\n" << W_ << std::endl;
-    //std::cerr << "F_\n" << F_ << std::endl;
-    //*/
+     //std::cerr << "G_\n" << G_ << std::endl;
+     // std::cerr << "H_\n" << H_ << std::endl;
+     // std::cerr << "E_\n" << E_ << std::endl;
+     //std::cerr << "W_\n" << W_ << std::endl;
+     //std::cerr << "F_\n" << F_ << std::endl;
+     //*/
   }
 
   ;
@@ -370,7 +369,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   {
     this->A_x_ = A;
   }
-  void setBx(Eigen::MatrixXd B)
+  void setBx(Eigen::VectorXd B)
   {
     this->b_x_ = B;
   }
@@ -378,7 +377,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   {
     this->A_u_ = A;
   }
-  void setBu(Eigen::MatrixXd B)
+  void setBu(Eigen::VectorXd B)
   {
     this->b_u_ = B;
   }
@@ -386,7 +385,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   {
     this->A_f_ = A;
   }
-  void setBf(Eigen::MatrixXd B)
+  void setBf(Eigen::VectorXd B)
   {
     this->b_f_ = B;
   }

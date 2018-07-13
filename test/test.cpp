@@ -5,14 +5,14 @@
 #include "ros_custom_controller_base/RobotContainer/RobotModuleContainerBase.hpp"
 #include "ros_custom_controller_base/State.h"
 
-
 void testTrajectoryTracking(ros::NodeHandle* nh)
 {
   robot::RobotModuleContainerBase<ros_custom_controller_base::State>* robot_ =
       new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::TrajectoryTrackingBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
+  controller::TrajectoryTrackingBase<
+      robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::TrajectoryTrackingBase<
           robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
@@ -22,23 +22,23 @@ void testTrajectoryTracking(ros::NodeHandle* nh)
   Eigen::MatrixXd R = Eigen::MatrixXd(1, 1);
   Eigen::MatrixXd A = Eigen::MatrixXd(1, 1);
   Eigen::MatrixXd B = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Ax = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bx = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Au = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bu = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Af = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bf = Eigen::MatrixXd(1, 1);
+  Eigen::MatrixXd Ax = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bx = Eigen::VectorXd(2);
+  Eigen::MatrixXd Au = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bu = Eigen::VectorXd(2);
+  Eigen::MatrixXd Af = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bf = Eigen::VectorXd(2);
   P << 10;
   Q << 100;
   R << 1000;
   A << 2;
   B << 3;
-  Ax << 5;
-  bx << 7;
-  Au << 11;
-  bu << 13;
-  Af << 17;
-  bf << 19;
+  Ax << 5, 5;
+  bx << 7, 7;
+  Au << 11, 11;
+  bu << 13, 13;
+  Af << 17, 17;
+  bf << 19, 19;
   std::cerr << "A\n" << A << std::endl;
   std::cerr << "B\n" << B << std::endl;
   std::cerr << "Ax\n" << Ax << std::endl;
@@ -48,7 +48,7 @@ void testTrajectoryTracking(ros::NodeHandle* nh)
   std::cerr << "Af\n" << Af << std::endl;
   std::cerr << "bf\n" << bf << std::endl;
   controller_->setHorizonLength(5);
-  controller_->setCostMatrices(P,Q,R);
+  controller_->setCostMatrices(P, Q, R);
 
   controller_->setA(A);
   controller_->setB(B);
@@ -76,7 +76,8 @@ void testDeltaFormulation(ros::NodeHandle* nh)
       new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::DeltaInputFormulationBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
+  controller::DeltaInputFormulationBase<
+      robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::DeltaInputFormulationBase<
           robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
@@ -112,7 +113,7 @@ void testDeltaFormulation(ros::NodeHandle* nh)
   std::cerr << "Af\n" << Af << std::endl;
   std::cerr << "bf\n" << bf << std::endl;
   controller_->setHorizonLength(5);
-  controller_->setCostMatrices(P,Q,R);
+  controller_->setCostMatrices(P, Q, R);
 
   controller_->setA(A);
   controller_->setB(B);
@@ -139,7 +140,8 @@ void testMPC(ros::NodeHandle* nh)
       new robot::RobotModuleContainerBase<ros_custom_controller_base::State>();
   robot_->setN(1);
   robot_->setM(1);
-  controller::ModelPredictiveControllerBase<robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
+  controller::ModelPredictiveControllerBase<
+      robot::RobotModuleContainerBase<ros_custom_controller_base::State>>* controller_ =
       new controller::ModelPredictiveControllerBase<
           robot::RobotModuleContainerBase<ros_custom_controller_base::State>>();
   controller_->create(robot_);
@@ -149,23 +151,23 @@ void testMPC(ros::NodeHandle* nh)
   Eigen::MatrixXd R = Eigen::MatrixXd(1, 1);
   Eigen::MatrixXd A = Eigen::MatrixXd(1, 1);
   Eigen::MatrixXd B = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Ax = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bx = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Au = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bu = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd Af = Eigen::MatrixXd(1, 1);
-  Eigen::MatrixXd bf = Eigen::MatrixXd(1, 1);
+  Eigen::MatrixXd Ax = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bx = Eigen::VectorXd(2);
+  Eigen::MatrixXd Au = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bu = Eigen::VectorXd(2);
+  Eigen::MatrixXd Af = Eigen::MatrixXd(2, 1);
+  Eigen::VectorXd bf = Eigen::VectorXd(2);
   P << 10;
   Q << 100;
   R << 1000;
   A << 2;
   B << 3;
-  Ax << 5;
-  bx << 7;
-  Au << 11;
-  bu << 13;
-  Af << 17;
-  bf << 19;
+  Ax << 5, 5;
+  bx << 7, 7;
+  Au << 11, 11;
+  bu << 13, 13;
+  Af << 17, 17;
+  bf << 19, 19;
   std::cerr << "A\n" << A << std::endl;
   std::cerr << "B\n" << B << std::endl;
   std::cerr << "Ax\n" << Ax << std::endl;
@@ -175,7 +177,7 @@ void testMPC(ros::NodeHandle* nh)
   std::cerr << "Af\n" << Af << std::endl;
   std::cerr << "bf\n" << bf << std::endl;
   controller_->setHorizonLength(5);
-  controller_->setCostMatrices(P,Q,R);
+  controller_->setCostMatrices(P, Q, R);
 
   controller_->setA(A);
   controller_->setB(B);
@@ -199,7 +201,8 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "test");
   ros::NodeHandle* nh = new ros::NodeHandle("~");
-  testTrajectoryTracking(nh);
   //testMPC(nh);
+
+  testTrajectoryTracking(nh);
   return 0;
 }
