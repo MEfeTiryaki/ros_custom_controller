@@ -166,11 +166,6 @@ class DeltaInputFormulationBase : public ModelPredictiveControllerBase<Robot>
     Eigen::VectorXd u = this->robot_->getInput();
     int n = this->robot_->getN();
     int m = this->robot_->getM();
-
-    if (delta_x[2] > M_PI)
-      delta_x[2] -= 2 * M_PI;
-    else if (delta_x[2] < -M_PI)
-      delta_x[2] += 2 * M_PI;
     this->q_ = delta_x.transpose() * this->F_ + u.transpose() * this->F_U_;
     this->b_ = (this->W_ + this->E_.block(0, 0, this->E_.rows(), n) * delta_x
         + this->E_.block(0, n, this->E_.rows(), m) * u);

@@ -309,10 +309,6 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   virtual void calculateCostMatrixes()
   {
     Eigen::VectorXd delta_x = this->robot_->getState() - this->robot_->getDesiredState();
-    if (delta_x[2] > M_PI)
-      delta_x[2] -= 2 * M_PI;
-    else if (delta_x[2] < -M_PI)
-      delta_x[2] += 2 * M_PI;
     q_ = delta_x.transpose() * F_;
     b_ = (W_ + E_ * delta_x);
   }

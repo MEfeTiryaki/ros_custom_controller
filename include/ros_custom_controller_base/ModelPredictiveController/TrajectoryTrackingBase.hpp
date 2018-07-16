@@ -164,20 +164,7 @@ class TrajectoryTrackingBase : public ModelPredictiveControllerBase<Robot>
     x_s.segment(0, n) = this->robot_->getState();
     for (int i = 0; i < this->horizonLength_; i++) {
       x_s.segment(i * n, n) = traj[i];
-      x_s[i*n+2] -= x[2];
-      if(x_s[i*n+2]>M_PI){
-        x_s[i*n+2] -= 2*M_PI;
-      }else if (x_s[i*n+2]<-M_PI){
-        x_s[i*n+2] += 2*M_PI;
-      }
     }
-    x[2] = 0.0 ;
-    //if (x[2] > M_PI)
-    //  x[2] -= 2 * M_PI;
-    //else if (x[2] < -M_PI)
-    //  x[2] += 2 * M_PI;
-
-
 
     this->q_ = (x.transpose() * this->S_x_.transpose() - x_s.transpose() * this->A_bar_.transpose())
         * this->Q_ * this->S_u_;
