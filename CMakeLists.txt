@@ -14,6 +14,10 @@ find_package(catkin REQUIRED
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 
+add_service_files(
+  FILES
+  SetState.srv
+)
 add_message_files(
   FILES
     State.msg

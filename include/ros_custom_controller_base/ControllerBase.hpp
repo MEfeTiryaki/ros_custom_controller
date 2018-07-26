@@ -14,8 +14,6 @@
 #include <memory>
 #include <mutex>
 #include <Eigen/Dense>
-
-
 namespace controller {
 template<typename Robot>
 class ControllerBase
@@ -69,8 +67,8 @@ class ControllerBase
   virtual void readParameters()
   {
     nodeHandle_->getParam(ns_ + "/controller/simulation", isSimulation_);
-    if(!isSimulation_){
-      std::cerr<<"controller is running on real robot"<<std::endl;
+    if (!isSimulation_) {
+      std::cerr << "controller is running on real robot" << std::endl;
     }
     nodeHandle_->getParam(ns_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;

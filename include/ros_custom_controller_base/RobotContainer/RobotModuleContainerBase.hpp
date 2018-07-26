@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 
 #include "ros_custom_controller_base/Input.h"
+#include "ros_custom_controller_base/SetState.h"
 
 namespace robot {
 struct TrajectoryPoint
@@ -61,6 +62,15 @@ class RobotModuleContainerBase : public RobotContainerBase
     stateSubscriber_ = nodeHandle_->subscribe(ns_ + "/" + stateSubscriberName_, 10,
                                               &RobotModuleContainerBase::StateSubscriberCallback,
                                               this);
+  }
+
+  virtual void initilizeServices() override
+  {
+    if (!setDesiredStateServiceName_.empty()){
+      setDesiredStateService_ = this->nodeHandle_->advertiseService(
+          this->ns_ + "/"+setDesiredStateServiceName_,
+          &RobotModuleContainerBase::setDesiredStateServiceCallback, this);
+    }
   }
 
   virtual void advance(double dt) override
@@ -232,6 +242,15 @@ class RobotModuleContainerBase : public RobotContainerBase
   }
   ;
 
+  virtual bool setDesiredStateServiceCallback(
+      ros_custom_controller_base::SetState::Request& request,
+      ros_custom_controller_base::SetState::Response& response)
+  {
+    std::cerr << "Robot Module Container set desired state!!" << std::endl;
+    return true;
+  }
+  ;
+
   int n_;
   int m_;
   int trajectoryLength_;
@@ -250,6 +269,9 @@ class RobotModuleContainerBase : public RobotContainerBase
 
   ros::Subscriber stateSubscriber_;
   std::string stateSubscriberName_;
+
+  ros::ServiceServer setDesiredStateService_;
+  std::string setDesiredStateServiceName_;
 
 };
 }
