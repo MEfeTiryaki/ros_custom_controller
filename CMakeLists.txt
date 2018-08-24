@@ -32,7 +32,7 @@ catkin_package(
 	INCLUDE_DIRS
 	  include
 	  ${EIGEN3_INCLUDE_DIR}
-	    ${boost_INCLUDE_DIR}
+	  ${boost_INCLUDE_DIR}
 	LIBRARIES
 	CATKIN_DEPENDS
 	  roscpp
