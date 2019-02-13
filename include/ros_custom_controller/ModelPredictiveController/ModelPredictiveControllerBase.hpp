@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ros_custom_controller_base/ControllerBase.hpp"
+#include "ros_custom_controller/ControllerBase.hpp"
 
 #include <ctime>
 
@@ -52,9 +52,9 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   }
   ;
 
-  virtual void initilize(ros::NodeHandle* nodeHandle) override
+  virtual void initialize(ros::NodeHandle* nodeHandle) override
   {
-    ControllerBase<Robot>::initilize(nodeHandle);
+    ControllerBase<Robot>::initialize(nodeHandle);
   }
 
   virtual void readParameters() override
@@ -209,7 +209,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   }
  protected:
 
-  virtual void initilizeCostMatrixes()
+  virtual void initializeCostMatrixes()
   {
     int n_x = b_x_.size();
     int n_u = b_u_.size();
@@ -387,7 +387,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   }
   void test()
   {
-    initilizeCostMatrixes();
+    initializeCostMatrixes();
   }
 
  protected:

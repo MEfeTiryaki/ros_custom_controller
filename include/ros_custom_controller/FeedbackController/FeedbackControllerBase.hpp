@@ -1,6 +1,13 @@
+/*
+ File name: FeedbackControllerBase.cpp
+ Author: Mehmet Efe Tiryaki
+ E-mail: m.efetiryaki@gmail.com
+ Date created: 2018
+ Date last modified: 13.02.2019
+ */
 #pragma once
 
-#include "ros_custom_controller_base/ControllerBase.hpp"
+#include "ros_custom_controller/ControllerBase.hpp"
 
 #include <ctime>
 
@@ -10,8 +17,10 @@ template<typename Robot>
 class FeedbackControllerBase : public ControllerBase<Robot>
 {
  public:
-  FeedbackControllerBase()
-      : ControllerBase<Robot>()
+  FeedbackControllerBase(ros::NodeHandle* nodeHandle)
+      : ControllerBase<Robot>(nodeHandle),
+        time_start_(0.0),
+        time_stop_(0.0)
   {
     time_start_ = clock();
     time_start_ros_ = ros::Time::now().toSec();

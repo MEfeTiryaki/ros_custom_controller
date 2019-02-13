@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ros_custom_controller_base/RobotContainer/RobotContainerBase.hpp"
+#include "ros_custom_controller/RobotContainer/RobotContainerBase.hpp"
 
 #include <ros/ros.h>
 #include <boost/thread.hpp>
@@ -11,8 +11,9 @@
 #include <ctime>
 #include <Eigen/Dense>
 
-#include "ros_custom_controller_base/Input.h"
-#include "ros_custom_controller_base/SetState.h"
+#include "std_msgs/Float64MultiArray.h"
+
+#include "ros_custom_controller/SetState.h"
 
 namespace robot {
 struct TrajectoryPoint
@@ -20,12 +21,12 @@ struct TrajectoryPoint
   Eigen::VectorXd point;
   double timeLeft;
 };
-template<typename StateType>
+
 class RobotModuleContainerBase : public RobotContainerBase
 {
  public:
-  RobotModuleContainerBase()
-      : RobotContainerBase(),
+  RobotModuleContainerBase(ros::NodeHandle* nodeHandle)
+      : RobotContainerBase(nodeHandle),
         n_(0),
         m_(0),
         trajectoryLength_(2),
@@ -41,12 +42,12 @@ class RobotModuleContainerBase : public RobotContainerBase
 
   virtual void create() override
   {
-    input_ = ros_custom_controller_base::Input();
+    input_ = std_msgs::Float64MultiArray();
   }
 
-  virtual void initilize(ros::NodeHandle* nodeHandle)
+  virtual void initialize()
   {
-    RobotContainerBase::initilize(nodeHandle);
+    RobotContainerBase::initialize();
     x_ = Eigen::VectorXd::Zero(n_);
     x_des_ = Eigen::VectorXd::Zero(n_);
     u_ = Eigen::VectorXd::Zero(m_);
@@ -57,18 +58,19 @@ class RobotModuleContainerBase : public RobotContainerBase
   }
   ;
 
-  virtual void initilizeSubscribers()
+  virtual void initializeSubscribers()
   {
-    stateSubscriber_ = nodeHandle_->subscribe(ns_ + "/" + stateSubscriberName_, 10,
+    stateSubscriber_ = this->nodeHandle_->subscribe(this->namespace_ + "/" + stateSubscriberName_, 10,
                                               &RobotModuleContainerBase::StateSubscriberCallback,
                                               this);
   }
 
-  virtual void initilizeServices() override
+  virtual void initializeServices() override
   {
     if (!setDesiredStateServiceName_.empty()){
+
       setDesiredStateService_ = this->nodeHandle_->advertiseService(
-          this->ns_ + "/"+setDesiredStateServiceName_,
+          this->namespace_ + "/"+setDesiredStateServiceName_,
           &RobotModuleContainerBase::setDesiredStateServiceCallback, this);
     }
   }
@@ -237,14 +239,14 @@ class RobotModuleContainerBase : public RobotContainerBase
 
  protected:
 
-  virtual void StateSubscriberCallback(StateType msg)
+  virtual void StateSubscriberCallback(std_msgs::Float64MultiArray msg)
   {
   }
   ;
 
   virtual bool setDesiredStateServiceCallback(
-      ros_custom_controller_base::SetState::Request& request,
-      ros_custom_controller_base::SetState::Response& response)
+      ros_custom_controller::SetState::Request& request,
+      ros_custom_controller::SetState::Response& response)
   {
     std::cerr << "Robot Module Container set desired state!!" << std::endl;
     return true;
@@ -261,7 +263,7 @@ class RobotModuleContainerBase : public RobotContainerBase
   std::vector<Eigen::VectorXd> x_trajectory_;
   std::vector<TrajectoryPoint> trajectoryBuffer_;
 
-  ros_custom_controller_base::Input input_;
+  std_msgs::Float64MultiArray input_;
 
   ros::Publisher commandPublisher_;
   std::string commandPublisherName_;

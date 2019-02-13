@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ros_custom_controller_base/ModelPredictiveController/ModelPredictiveControllerBase.hpp"
+#include "ros_custom_controller/ModelPredictiveController/ModelPredictiveControllerBase.hpp"
 
 #include <ctime>
 
@@ -31,9 +31,9 @@ class DeltaInputFormulationBase : public ModelPredictiveControllerBase<Robot>
   }
   ;
 
-  virtual void initilize(ros::NodeHandle* nodeHandle) override
+  virtual void initialize(ros::NodeHandle* nodeHandle) override
   {
-    ModelPredictiveControllerBase<Robot>::initilize(nodeHandle);
+    ModelPredictiveControllerBase<Robot>::initialize(nodeHandle);
   }
 
   virtual void readParameters() override
@@ -44,7 +44,7 @@ class DeltaInputFormulationBase : public ModelPredictiveControllerBase<Robot>
 
  protected:
 
-  virtual void initilizeCostMatrixes() override
+  virtual void initializeCostMatrixes() override
   {
     int n_x = this->b_x_.size();
     int n_u = this->b_u_.size();

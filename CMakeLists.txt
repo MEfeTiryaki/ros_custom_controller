@@ -1,31 +1,39 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ros_custom_controller_base)
+project(ros_custom_controller)
 
 add_definitions("-std=c++11")
 
 find_package(catkin REQUIRED
   COMPONENTS
+    ros_node_utils
     message_generation
     std_msgs
     ros_node_utils
     roscpp
-    ooqp_eigen_interface
+    actionlib_msgs
+    actionlib
+    trajectory_msgs
 )
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 
+add_action_files(
+  DIRECTORY
+    action
+  FILES
+    ControllerTrajectory.action
+)
+
 add_service_files(
   FILES
-  SetState.srv
+    SetState.srv
 )
 add_message_files(
   FILES
     State.msg
-    Input.msg
 )
 generate_messages(
-  DEPENDENCIES
-    std_msgs
+  DEPENDENCIES actionlib_msgs std_msgs   trajectory_msgs
 )
 
 catkin_package(
@@ -35,11 +43,14 @@ catkin_package(
 	  ${boost_INCLUDE_DIR}
 	LIBRARIES
 	CATKIN_DEPENDS
+	  ros_node_utils
 	  roscpp
 	  ros_node_utils
 	  message_generation
 	  std_msgs
-	  ooqp_eigen_interface
+    trajectory_msgs
+    actionlib_msgs
+	  #ooqp_eigen_interface
 )
 
 include_directories(
@@ -50,15 +61,15 @@ include_directories(
 )
 
 
-add_executable(controller_test
-  test/test.cpp
-)
-add_dependencies(controller_test
-  ${catkin_EXPORTED_TARGETS}
-)
-target_link_libraries(controller_test
-  ${catkin_LIBRARIES}
-)
+#add_executable(controller_test
+#  test/test.cpp
+#)
+#add_dependencies(controller_test
+#  ${catkin_EXPORTED_TARGETS}
+#)
+#target_link_libraries(controller_test
+#  ${catkin_LIBRARIES}
+#)
 
 install(
   DIRECTORY include/${PROJECT_NAME}/

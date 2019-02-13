@@ -3,7 +3,7 @@
  Author: Mehmet Efe Tiryaki
  E-mail: m.efetiryaki@gmail.com
  Date created: 19.06.2018
- Date last modified: 19.06.2018
+ Date last modified: 13.02.2019
  */
 #pragma once
 
@@ -14,20 +14,22 @@
 #include <memory>
 #include <mutex>
 #include <Eigen/Dense>
+#include "ros_node_base/RosNodeModuleBase.hpp"
+
+using namespace ros_node_utils;
+
 namespace controller {
 template<typename Robot>
-class ControllerBase
+class ControllerBase: public RosNodeModuleBase
 {
  public:
-  ControllerBase()
-      : isSimulation_(true),
+  ControllerBase(ros::NodeHandle* nodeHandle)
+      : RosNodeModuleBase(nodeHandle),
+        isSimulation_(true),
         dt_(0.0),
         robot_(),
-        nodeHandle_(),
         controllerRate_(0)
   {
-    ns_ = ros::this_node::getNamespace();
-    ns_.erase(0, 1);
   }
   ;
   virtual ~ControllerBase()
@@ -41,24 +43,6 @@ class ControllerBase
   }
   ;
 
-  virtual void initilize(ros::NodeHandle* nodeHandle)
-  {
-    nodeHandle_ = nodeHandle;
-  }
-  ;
-  virtual void initilizeSubscribers()
-  {
-  }
-  ;
-
-  virtual void initilizePublishers()
-  {
-  }
-  ;
-  virtual void initilizeServices()
-  {
-  }
-  ;
   virtual void advance(double dt)
   {
   }
@@ -66,11 +50,11 @@ class ControllerBase
 
   virtual void readParameters()
   {
-    nodeHandle_->getParam(ns_ + "/controller/simulation", isSimulation_);
+    paramRead(this->nodeHandle_,this->namespace_ + "/controller/simulation", isSimulation_);
     if (!isSimulation_) {
-      std::cerr << "controller is running on real robot" << std::endl;
+      WARNING( "controller is running on real robot" );
     }
-    nodeHandle_->getParam(ns_ + "/controller/rate", controllerRate_);
+    paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", isSimulation_);
     dt_ = 1.0 / controllerRate_;
   }
   ;
@@ -82,8 +66,6 @@ class ControllerBase
 
  protected:
 
-  ros::NodeHandle* nodeHandle_;
-  std::string ns_;
   std::mutex mutex_;
   double dt_;
   double controllerRate_;

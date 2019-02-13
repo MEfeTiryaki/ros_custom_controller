@@ -3,7 +3,7 @@
  Author: Mehmet Efe Tiryaki
  E-mail: m.efetiryaki@gmail.com
  Date created: 19.06.2018
- Date last modified: 19.06.2018
+ Date last modified: 13.02.2019
  */
 #pragma once
 
@@ -16,16 +16,16 @@
 #include <Eigen/Dense>
 
 #include <std_srvs/SetBool.h>
-#include "ros_custom_controller_base/RobotContainer/RobotContainerBase.hpp"
+#include "ros_custom_controller/RobotContainer/RobotContainerBase.hpp"
 
 namespace controller {
 
 template<typename Robot>
-class ControllerFrameBase : public ros_node_base::RosExecuterNodeBase
+class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 {
  public:
   ControllerFrameBase(std::string nodeName)
-      : ros_node_base::RosExecuterNodeBase(nodeName),
+      : ros_node_utils::RosExecuterNodeBase(nodeName),
         controllerRate_(100),
         isSimulation_(true),
         run_(false),
@@ -42,7 +42,7 @@ class ControllerFrameBase : public ros_node_base::RosExecuterNodeBase
   virtual void create() override
   {
     RosExecuterNodeBase::create();
-    robot_ = new Robot();
+    robot_ = new Robot(this->nodeHandle_);
     robot_->create();
 
   }
@@ -61,10 +61,10 @@ class ControllerFrameBase : public ros_node_base::RosExecuterNodeBase
     robot_->readParameters();
   }
   ;
-  virtual void initilize() override
+  virtual void initialize() override
   {
-    robot_->initilize(this->nodeHandle_);
-    RosExecuterNodeBase::initilize();
+    robot_->initialize();
+    RosExecuterNodeBase::initialize();
   }
   ;
 
@@ -87,25 +87,25 @@ class ControllerFrameBase : public ros_node_base::RosExecuterNodeBase
   }
   ;
 
-  virtual void initilizePublishers()
+  virtual void initializePublishers()
   {
-    robot_->initilizePublishers();
+    robot_->initializePublishers();
   }
   ;
 
-  virtual void initilizeSubscribers()
+  virtual void initializeSubscribers()
   {
-    robot_->initilizeSubscribers();
+    robot_->initializeSubscribers();
   }
   ;
 
-  virtual void initilizeServices()
+  virtual void initializeServices()
   {
     // Controller Stop Service
     this->services_[this->serviceNames_[0]] = this->nodeHandle_->advertiseService(
          this->nodeName_ + "/" + this->serviceNames_[0],
         &ControllerFrameBase::controllerStopServiceCallback, this);
-    robot_->initilizeServices();
+    robot_->initializeServices();
   }
   ;
   bool controllerStopServiceCallback(std_srvs::SetBool::Request& request,
