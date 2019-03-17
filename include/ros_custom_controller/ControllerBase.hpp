@@ -50,11 +50,11 @@ class ControllerBase: public RosNodeModuleBase
 
   virtual void readParameters()
   {
-    paramRead(this->nodeHandle_,this->namespace_ + "/controller/simulation", isSimulation_);
+    paramRead(this->nodeHandle_,this->namespace_ + "/simulation", isSimulation_);
     if (!isSimulation_) {
       WARNING( "controller is running on real robot" );
     }
-    paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", isSimulation_);
+    paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
   }
   ;
