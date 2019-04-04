@@ -20,7 +20,10 @@ class FeedbackControllerBase : public ControllerBase<Robot>
   FeedbackControllerBase(ros::NodeHandle* nodeHandle)
       : ControllerBase<Robot>(nodeHandle),
         time_start_(0.0),
-        time_stop_(0.0)
+        time_stop_(0.0),
+        time_start_ros_(0.0),
+        time_stop_ros_(0.0)
+
   {
     time_start_ = clock();
     time_start_ros_ = ros::Time::now().toSec();
