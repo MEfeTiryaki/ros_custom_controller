@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "ros_node_base/RosExecuterNodeBase.hpp"
+#include "ros_node_utils/RosExecuterNodeBase.hpp"
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <math.h>
