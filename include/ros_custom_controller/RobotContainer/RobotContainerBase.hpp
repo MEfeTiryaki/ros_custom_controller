@@ -18,7 +18,7 @@
 #include <ctime>
 #include <Eigen/Dense>
 
-#include "ros_node_base/RosNodeModuleBase.hpp"
+#include "ros_node_utils/RosNodeModuleBase.hpp"
 using namespace ros_node_utils;
 
 namespace robot {
