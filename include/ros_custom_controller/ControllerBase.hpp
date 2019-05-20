@@ -31,22 +31,22 @@ class ControllerBase: public RosNodeModuleBase
         controllerRate_(0)
   {
   }
-  ;
+
   virtual ~ControllerBase()
   {
   }
-  ;
+
 
   virtual void create(Robot* r)
   {
     robot_ = r;
   }
-  ;
+
 
   virtual void advance(double dt)
   {
   }
-  ;
+
 
   virtual void readParameters()
   {
@@ -57,12 +57,14 @@ class ControllerBase: public RosNodeModuleBase
     paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
   }
-  ;
+
+
   virtual void publish()
   {
     robot_->publish();
   }
-  ;
+
+
 
  protected:
 

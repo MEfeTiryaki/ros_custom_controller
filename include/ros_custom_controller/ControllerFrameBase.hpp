@@ -16,10 +16,11 @@
 #include <Eigen/Dense>
 
 #include <std_srvs/SetBool.h>
-#include "ros_custom_controller/RobotContainer/RobotContainerBase.hpp"
+#include "robot_container/RobotContainerBase.hpp"
+#include "ros_custom_estimator/EstimatorBase.hpp"
+#include "ros_custom_hardware_adapter/HardwareAdapterFrameBase.hpp"
 
 namespace controller {
-
 template<typename Robot>
 class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 {
@@ -30,7 +31,9 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
         isSimulation_(true),
         run_(false),
         dt_(0.0),
-        robot_()
+        robot_(),
+        stateEstimator_(),
+        hardwareAdapterFrame_()
   {
   }
   ;
@@ -58,13 +61,19 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
     this->nodeHandle_->getParam(this->namespace_ + "/controller/services/stop/topic", data);
     this->serviceNames_.push_back(data);
 
+    hardwareAdapterFrame_->readParameters();
+
     robot_->readParameters();
+
+    stateEstimator_->readParameters();
   }
   ;
   virtual void initialize() override
   {
-    robot_->initialize();
     RosExecuterNodeBase::initialize();
+    hardwareAdapterFrame_->initialize();
+    robot_->initialize();
+    stateEstimator_->initialize();
   }
   ;
 
@@ -83,19 +92,26 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
       }
       ros::spinOnce();
       this->rate_->sleep();
+      //CONFIRM("[Controller] : " + std::to_string(ros::Time::now().toNSec()/1000000.0));
     }
   }
   ;
 
   virtual void initializePublishers()
   {
+    hardwareAdapterFrame_->initializePublishers();
     robot_->initializePublishers();
+
+    stateEstimator_->initializePublishers();
   }
   ;
 
   virtual void initializeSubscribers()
   {
+
+    hardwareAdapterFrame_->initializeSubscribers();
     robot_->initializeSubscribers();
+    stateEstimator_->initializeSubscribers();
   }
   ;
 
@@ -103,15 +119,18 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
   {
     // Controller Stop Service
     this->services_[this->serviceNames_[0]] = this->nodeHandle_->advertiseService(
-         this->nodeName_ + "/" + this->serviceNames_[0],
+        this->nodeName_ + "/" + this->serviceNames_[0],
         &ControllerFrameBase::controllerStopServiceCallback, this);
+    hardwareAdapterFrame_->initializeServices();
     robot_->initializeServices();
+    stateEstimator_->initializeServices();
   }
   ;
   bool controllerStopServiceCallback(std_srvs::SetBool::Request& request,
                                      std_srvs::SetBool::Response& response)
   {
     run_ = !request.data;
+    stateEstimator_->setRun(run_);
     response.success = true;
     return true;
   }
@@ -130,5 +149,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
   bool run_;
 
   Robot* robot_;
+  estimator::EstimatorBase* stateEstimator_;
+  hardware_adapter::HardwareAdapterFrameBase* hardwareAdapterFrame_;
 };
 }  // namespace estimator

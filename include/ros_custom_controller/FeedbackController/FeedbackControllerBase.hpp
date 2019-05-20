@@ -44,7 +44,6 @@ class FeedbackControllerBase : public ControllerBase<Robot>
 
   virtual void advance(double dt) override
   {
-    std::lock_guard<std::mutex> lock(this->mutex_);
     this->dt_ = dt;
     calculateError();
     calculateInput();
