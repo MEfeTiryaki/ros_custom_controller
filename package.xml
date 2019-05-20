@@ -14,8 +14,13 @@
   <depend>trajectory_msgs</depend>
   <depend>actionlib_msgs</depend>
   <depend>message_generation</depend>
-	
+
   <depend>boost</depend>
+  <depend>ros_custom_estimator</depend>
+  <depend>robot_container</depend>
+
+
+
   <!--depend>ooqp_eigen_interface</depend-->
 
   <!--depend>ooqp_catkin</depend-->

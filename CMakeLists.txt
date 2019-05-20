@@ -6,6 +6,8 @@ add_definitions("-std=c++11")
 find_package(catkin REQUIRED
   COMPONENTS
     ros_node_utils
+    ros_custom_estimator
+    robot_container
     message_generation
     std_msgs
     ros_node_utils
@@ -17,25 +19,6 @@ find_package(catkin REQUIRED
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 
-add_action_files(
-  DIRECTORY
-    action
-  FILES
-    ControllerTrajectory.action
-)
-
-add_service_files(
-  FILES
-    SetState.srv
-)
-add_message_files(
-  FILES
-    State.msg
-)
-generate_messages(
-  DEPENDENCIES actionlib_msgs std_msgs   trajectory_msgs
-)
-
 catkin_package(
 	INCLUDE_DIRS
 	  include
@@ -44,8 +27,9 @@ catkin_package(
 	LIBRARIES
 	CATKIN_DEPENDS
 	  ros_node_utils
+    ros_custom_estimator
+    robot_container
 	  roscpp
-	  ros_node_utils
 	  message_generation
 	  std_msgs
     trajectory_msgs
