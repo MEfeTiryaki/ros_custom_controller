@@ -92,10 +92,6 @@ class RobotContainerBase : public RosNodeModuleBase
   }
   ;
 
-  virtual Eigen::VectorXd getCommand(){
-    return Eigen::VectorXd::Zero(3);
-  }
-
  protected:
 
 
