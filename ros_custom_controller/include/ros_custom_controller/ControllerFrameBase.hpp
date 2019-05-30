@@ -52,7 +52,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
   ;
   virtual void readParameters() override
   {
-    this->nodeHandle_->getParam(this->namespace_ + "/controller/simulation", isSimulation_);
+    this->nodeHandle_->getParam("/simulation", isSimulation_);
     this->nodeHandle_->getParam(this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
     this->rate_ = new ros::Rate(controllerRate_);

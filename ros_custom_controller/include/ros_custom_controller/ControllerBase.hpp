@@ -50,7 +50,7 @@ class ControllerBase: public RosNodeModuleBase
 
   virtual void readParameters()
   {
-    paramRead(this->nodeHandle_,this->namespace_ + "/simulation", isSimulation_);
+    paramRead(this->nodeHandle_, "/simulation", isSimulation_);
     if (!isSimulation_) {
       WARNING( "controller is running on real robot" );
     }
