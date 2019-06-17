@@ -34,17 +34,19 @@ class RobotContainerBase : public RosNodeModuleBase
         isSimulation_(true),
         stateMutex_()
   {
+    ERROR("\n\n\n CONSTRUCTOR\n\n\n");
   }
-  ;
+
 
   virtual ~RobotContainerBase()
   {
   }
-  ;
+
 
   virtual void create()
   {
-
+    RosNodeModuleBase::create();
+    CONFIRM("create : [Robot_Container_Base]");
   }
 
   virtual void readParameters()
@@ -53,13 +55,22 @@ class RobotContainerBase : public RosNodeModuleBase
     if (!isSimulation_) {
       WARNING("controller is running on real robot");
     }
+    CONFIRM("readParameters : [Robot_Container_Base]");
   }
   ;
 
   virtual void initialize() override
   {
     RosNodeModuleBase::initialize();
+    CONFIRM("initialize : [Robot_Container_Base]");
   }
+
+  virtual void shutdown() override
+  {
+    RosNodeModuleBase::shutdown();
+    ERROR("shutdown : [Robot_container_base]");
+  }
+
 
   virtual void initializePublishers() override
   {

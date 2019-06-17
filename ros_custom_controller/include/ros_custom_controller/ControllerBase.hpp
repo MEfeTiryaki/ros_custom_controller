@@ -27,8 +27,8 @@ class ControllerBase: public RosNodeModuleBase
       : RosNodeModuleBase(nodeHandle),
         isSimulation_(true),
         dt_(0.0),
-        robot_(),
-        controllerRate_(0)
+        controllerRate_(0),
+        robot_()
   {
   }
 
@@ -39,14 +39,12 @@ class ControllerBase: public RosNodeModuleBase
 
   virtual void create(Robot* r)
   {
+    isSimulation_ = true ;
+    dt_= 0.0;
+    controllerRate_ = 0 ;
     robot_ = r;
+    CONFIRM("create : [Controller_Base]");
   }
-
-
-  virtual void advance(double dt)
-  {
-  }
-
 
   virtual void readParameters()
   {
@@ -56,6 +54,11 @@ class ControllerBase: public RosNodeModuleBase
     }
     paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
+    CONFIRM("readParameters : [Controller_Base]");
+  }
+
+  virtual void advance(double dt)
+  {
   }
 
 

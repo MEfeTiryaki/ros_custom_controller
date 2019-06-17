@@ -46,7 +46,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
         trajectoryLength_(2),
         dt_(0.0),
         isSimulation_(false),
-        stateMutex_(new std::mutex())
+        stateMutex_(new std::mutex()),
+        trajectoryMutex_(new std::mutex())
   {
   }
 
@@ -60,6 +61,11 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   {
   }
 
+  virtual void create() override
+  {
+    RosNodeModuleBase::create();
+    CONFIRM("create : [Robot_Module_Container_Base]");
+  }
   /*! \~english
    * @brief read ros parameters
    * @details it reads if the system runs in simulation or not
@@ -70,6 +76,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     if (!isSimulation_) {
       WARNING("[RobotModuleContainerBase] : is running on real robot");
     }
+    CONFIRM("readParameters : [Robot_Module_Container_Base]");
   }
 
   /*! \~english
@@ -80,7 +87,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
    * u_ : control input of the robot with zero vector of m_ length
    * x_trajectory_ : vector of  desired states  with zero vector of n_ length
    */
-  virtual void initialize()
+  virtual void initialize() override
   {
     RosNodeModuleBase::initialize();
     x_ = Eigen::VectorXd::Zero(n_);
@@ -90,6 +97,18 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     for (int i = 0; i < trajectoryLength_; i++) {
       x_trajectory_[i] = Eigen::VectorXd::Zero(n_);
     }
+    CONFIRM("initialize : [Robot_Module_Container_Base]");
+  }
+
+  /*! \~english
+   * @brief shutdown the robot services
+   * @details
+   */
+  virtual void shutdown() override
+  {
+    RosNodeModuleBase::shutdown();
+    setDesiredStateService_.shutdown();   
+    ERROR("shutdown : [Robot_module_container_base]");
   }
 
   /*! \~english
@@ -124,8 +143,9 @@ class RobotModuleContainerBase : public RosNodeModuleBase
    */
   void updateTrajectory()
   {
+    Eigen::VectorXd nextTrajectory = getNextTrajectoryFromBuffer();
     x_trajectory_.erase(x_trajectory_.begin());
-    x_trajectory_.push_back(getNextTrajectoryFromBuffer());
+    x_trajectory_.push_back(nextTrajectory);
   }
 
   /*! \~english
@@ -138,6 +158,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
    */
   virtual Eigen::VectorXd getNextTrajectoryFromBuffer()
   {
+    std::lock_guard<std::mutex> lock(*this->trajectoryMutex_);
     Eigen::VectorXd nextTrajectoryPoint = Eigen::VectorXd::Zero(n_);
 
     // Checks whether buffer is empty  or not
@@ -310,6 +331,16 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return m_;
   }
 
+
+  /*! \~english
+   * @brief getter for trajectory mutex
+   * @details
+   */
+  std::mutex* getTrajectoryMutex()
+  {
+    return trajectoryMutex_;
+  }
+
   /*! \~english
    * @brief setter for trajectory length
    * @details
@@ -391,6 +422,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   virtual bool setDesiredStateServiceCallback(robot_container::SetState::Request& request,
                                               robot_container::SetState::Response& response)
   {
+    std::lock_guard<std::mutex> lock(*this->trajectoryMutex_);
     ERROR("Robot Module Container set desired state!!");
     return true;
   }
@@ -398,6 +430,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   // VARIABLES
  protected:
   std::mutex* stateMutex_;
+  std::mutex* trajectoryMutex_;
 
   double dt_;
   bool isSimulation_;
