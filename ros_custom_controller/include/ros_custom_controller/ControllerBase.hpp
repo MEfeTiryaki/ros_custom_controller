@@ -43,7 +43,7 @@ class ControllerBase: public RosNodeModuleBase
     dt_= 0.0;
     controllerRate_ = 0 ;
     robot_ = r;
-    CONFIRM("create : [Controller_Base]");
+   //CONFIRM("create : [Controller_Base]");
   }
 
   virtual void readParameters()
@@ -54,7 +54,7 @@ class ControllerBase: public RosNodeModuleBase
     }
     paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
-    CONFIRM("readParameters : [Controller_Base]");
+   //CONFIRM("readParameters : [Controller_Base]");
   }
 
   virtual void advance(double dt)

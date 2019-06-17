@@ -39,7 +39,7 @@ class FeedbackControllerBase : public ControllerBase<Robot>
   {
     ControllerBase<Robot>::create(r);
     x_err_ = Eigen::VectorXd::Zero(this->robot_->getState().size());
-    CONFIRM("create : [Feedback_Controller_Base]");
+   //CONFIRM("create : [Feedback_Controller_Base]");
   }
   ;
 

@@ -52,7 +52,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 
     robot_ = new Robot(this->nodeHandle_);
     robot_->create();
-    CONFIRM("create : [Controller_Frame_Base]");
+   //CONFIRM("create : [Controller_Frame_Base]");
   }
 
   virtual void readParameters() override
@@ -73,7 +73,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 
     stateEstimator_->readParameters();
 
-    CONFIRM("readParameters : [Controller_Frame_Base]");
+   //CONFIRM("readParameters : [Controller_Frame_Base]");
   }
 
   virtual void initializePublishers() override
@@ -116,7 +116,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
     hardwareAdapterFrame_->initialize();
     robot_->initialize();
     stateEstimator_->initialize();
-    CONFIRM("initialize : [Controller_Frame_Base]");
+   //CONFIRM("initialize : [Controller_Frame_Base]");
   }
 
   virtual void shutdown() override
@@ -131,7 +131,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
     delete hardwareAdapterFrame_ ;
     delete robot_;
     delete stateEstimator_;
-    ERROR("shutdown : [Controller_Frame_Base]");
+   //ERROR("shutdown : [Controller_Frame_Base]");
   }
 
   virtual void advance(double dt)
@@ -168,13 +168,13 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
   virtual void connect()
   {
     controllerThread_ = new boost::thread(boost::bind(&ControllerFrameBase::execute, this));
-    WARNING("connect : [Controller_Frame_Base]");
+   //WARNING("connect : [Controller_Frame_Base]");
   }
 
   virtual void disconnect()
   {
     controllerThread_->detach();
-    WARNING("disconnect : [Controller_Frame_Base]");
+   //WARNING("disconnect : [Controller_Frame_Base]");
   }
 
 protected:

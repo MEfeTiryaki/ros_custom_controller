@@ -64,7 +64,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   virtual void create() override
   {
     RosNodeModuleBase::create();
-    CONFIRM("create : [Robot_Module_Container_Base]");
+   //CONFIRM("create : [Robot_Module_Container_Base]");
   }
   /*! \~english
    * @brief read ros parameters
@@ -76,7 +76,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     if (!isSimulation_) {
       WARNING("[RobotModuleContainerBase] : is running on real robot");
     }
-    CONFIRM("readParameters : [Robot_Module_Container_Base]");
+   //CONFIRM("readParameters : [Robot_Module_Container_Base]");
   }
 
   /*! \~english
@@ -97,7 +97,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     for (int i = 0; i < trajectoryLength_; i++) {
       x_trajectory_[i] = Eigen::VectorXd::Zero(n_);
     }
-    CONFIRM("initialize : [Robot_Module_Container_Base]");
+   //CONFIRM("initialize : [Robot_Module_Container_Base]");
   }
 
   /*! \~english
@@ -108,7 +108,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   {
     RosNodeModuleBase::shutdown();
     setDesiredStateService_.shutdown();   
-    ERROR("shutdown : [Robot_module_container_base]");
+   //ERROR("shutdown : [Robot_module_container_base]");
   }
 
   /*! \~english
