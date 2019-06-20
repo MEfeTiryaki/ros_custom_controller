@@ -148,7 +148,7 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
       if (run_) {
         advance(dt_);
       }
-      ros::spinOnce();
+      //ros::spinOnce();
       this->rate_->sleep();
       //CONFIRM("[Controller] : " + std::to_string(ros::Time::now().toNSec()/1000000.0));
     }
