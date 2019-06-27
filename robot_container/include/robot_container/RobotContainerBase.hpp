@@ -52,7 +52,6 @@ class RobotContainerBase : public RosNodeModuleBase
   {
     paramRead(this->nodeHandle_,"/simulation", isSimulation_);
     if (!isSimulation_) {
-      WARNING("controller is running on real robot");
     }
    //CONFIRM("readParameters : [Robot_Container_Base]");
   }

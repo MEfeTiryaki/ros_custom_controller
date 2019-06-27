@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "ros_node_utils/RosExecuterNodeBase.hpp"
+#include "ros_node_utils/RosNodeModuleBase.hpp"
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <math.h>
@@ -22,18 +22,19 @@
 
 namespace controller {
 template<typename Robot>
-class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
+class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
 {
  public:
-  ControllerFrameBase(std::string nodeName)
-      : ros_node_utils::RosExecuterNodeBase(nodeName),
+  ControllerFrameBase(ros::NodeHandle* nodeHandle)
+      : ros_node_utils::RosNodeModuleBase(nodeHandle),
         controllerRate_(100),
         isSimulation_(true),
         run_(false),
         dt_(0.0),
         robot_(),
         stateEstimator_(),
-        hardwareAdapterFrame_()
+        hardwareAdapterFrame_(),
+        controllerThread_()
   {
   }
 
@@ -44,20 +45,19 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 
   virtual void create() override
   {
-    RosExecuterNodeBase::create();
-    controllerRate_ = 100 ;
-    isSimulation_ = true ;
+    RosNodeModuleBase::create();
+    controllerRate_ = 100;
+    isSimulation_ = true;
     run_ = false;
     dt_ = 0.0;
 
-    robot_ = new Robot(this->nodeHandle_);
+    robot_.reset(new Robot(this->nodeHandle_));
     robot_->create();
-   //CONFIRM("create : [Controller_Frame_Base]");
   }
 
   virtual void readParameters() override
   {
-    RosExecuterNodeBase::readParameters();
+    RosNodeModuleBase::readParameters();
     this->nodeHandle_->getParam("/simulation", isSimulation_);
     this->nodeHandle_->getParam(this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
@@ -72,23 +72,20 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
     robot_->readParameters();
 
     stateEstimator_->readParameters();
-
-   //CONFIRM("readParameters : [Controller_Frame_Base]");
   }
 
   virtual void initializePublishers() override
   {
-    RosExecuterNodeBase::initializePublishers();
+    RosNodeModuleBase::initializePublishers();
     hardwareAdapterFrame_->initializePublishers();
     robot_->initializePublishers();
     stateEstimator_->initializePublishers();
 
   }
 
-
   virtual void initializeSubscribers() override
   {
-    RosExecuterNodeBase::initializeSubscribers();
+    RosNodeModuleBase::initializeSubscribers();
     hardwareAdapterFrame_->initializeSubscribers();
     robot_->initializeSubscribers();
     stateEstimator_->initializeSubscribers();
@@ -96,10 +93,8 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 
   virtual void initializeServices() override
   {
-    RosExecuterNodeBase::initializeServices();
+    RosNodeModuleBase::initializeServices();
     // Controller Stop Service
-    nodeRestartServices_ = this->nodeHandle_->advertiseService(
-        "/controller_restart",&ControllerFrameBase::nodeRestartCallback, this);
 
     stopServices_ = this->nodeHandle_->advertiseService(
         this->nodeName_ + "/" + this->serviceNames_[0],
@@ -112,72 +107,70 @@ class ControllerFrameBase : public ros_node_utils::RosExecuterNodeBase
 
   virtual void initialize() override
   {
-    RosExecuterNodeBase::initialize();
+    RosNodeModuleBase::initialize();
     hardwareAdapterFrame_->initialize();
     robot_->initialize();
     stateEstimator_->initialize();
-   //CONFIRM("initialize : [Controller_Frame_Base]");
   }
 
   virtual void shutdown() override
   {
-    RosExecuterNodeBase::shutdown();
-    disconnect();
-    nodeRestartServices_.shutdown();
+    std::lock_guard<std::mutex> lock(*shutdownMutex_);
+    RosNodeModuleBase::shutdown();
+    stop();
     stopServices_.shutdown();
     hardwareAdapterFrame_->shutdown();
     robot_->shutdown();
     stateEstimator_->shutdown();
-    delete hardwareAdapterFrame_ ;
-    delete robot_;
-    delete stateEstimator_;
-   //ERROR("shutdown : [Controller_Frame_Base]");
+
+    int i = 0;
+    while (!(hardwareAdapterFrame_->isTerminated() && stateEstimator_->isTerminated())) {
+    }
+
+    hardwareAdapterFrame_->clean();
+    stateEstimator_->clean();
+
+    hardwareAdapterFrame_.reset();
+    stateEstimator_.reset();
+
+    robot_.reset();
   }
 
   virtual void advance(double dt)
   {
-    //CONFIRM(boost::lexical_cast<std::string>(controllerThread_->get_id()) + "[Controller_Frame_base] ");
     dt_ = dt;
     robot_->advance(dt_);
   }
 
-
   virtual void execute()
   {
     while (ros::ok()) {
-      if (run_) {
-        advance(dt_);
+      {
+        std::lock_guard<std::mutex> lock(*shutdownMutex_);
+        if (!isTerminationStarted()) {
+          if (run_) {
+            advance(dt_);
+          }
+        } else {
+          break;
+        }
       }
-      //ros::spinOnce();
       this->rate_->sleep();
-      //CONFIRM("[Controller] : " + std::to_string(ros::Time::now().toNSec()/1000000.0));
     }
+    terminate();
   }
 
-  virtual void run()
-  {
-    ros::Rate mainRate = ros::Rate(100);
-    while (ros::ok()) {
-      ros::spinOnce();
-      mainRate.sleep();
-    }
-  }
-
-
-
-  virtual void connect()
+  void start() override
   {
     controllerThread_ = new boost::thread(boost::bind(&ControllerFrameBase::execute, this));
-   //WARNING("connect : [Controller_Frame_Base]");
   }
 
-  virtual void disconnect()
+  virtual void stop()
   {
     controllerThread_->detach();
-   //WARNING("disconnect : [Controller_Frame_Base]");
   }
 
-protected:
+ protected:
   bool controllerStopServiceCallback(std_srvs::SetBool::Request& request,
                                      std_srvs::SetBool::Response& response)
   {
@@ -187,28 +180,9 @@ protected:
     return true;
   }
 
-  bool nodeRestartCallback(std_srvs::Empty::Request& request,
-    std_srvs::Empty::Response& response)
-  {
-    run_ = false ;
-    restartThread_ = new boost::thread(boost::bind(&ControllerFrameBase::restart, this));
-    return true;
-  }
-
-  void restart()
-  {
-    sleep(0.5);
-    shutdown();
-    create();
-    readParameters();
-    initialize();
-    connect();
-  }
-
  protected:
 
   boost::thread* controllerThread_;
-  boost::thread* restartThread_;
 
   std::mutex mutex_;
   double controllerRate_;
@@ -217,12 +191,11 @@ protected:
   bool isSimulation_;
   std::string stopServiceName_;
   ros::ServiceServer stopServices_;
-  ros::ServiceServer nodeRestartServices_;
-  // Flag for running
+// Flag for running
   bool run_;
 
-  Robot* robot_;
-  estimator::EstimatorBase* stateEstimator_;
-  hardware_adapter::HardwareAdapterFrameBase* hardwareAdapterFrame_;
+  std::unique_ptr<Robot> robot_;
+  std::unique_ptr<estimator::EstimatorBase> stateEstimator_;
+  std::unique_ptr<hardware_adapter::HardwareAdapterFrameBase> hardwareAdapterFrame_;
 };
 }  // namespace estimator

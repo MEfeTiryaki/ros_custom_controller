@@ -23,12 +23,12 @@ template<typename Robot>
 class ControllerBase: public RosNodeModuleBase
 {
  public:
-  ControllerBase(ros::NodeHandle* nodeHandle)
+  ControllerBase(ros::NodeHandle* nodeHandle, Robot& robot)
       : RosNodeModuleBase(nodeHandle),
         isSimulation_(true),
         dt_(0.0),
         controllerRate_(0),
-        robot_()
+        robot_(robot)
   {
   }
 
@@ -37,12 +37,11 @@ class ControllerBase: public RosNodeModuleBase
   }
 
 
-  virtual void create(Robot* r)
+  virtual void create()
   {
     isSimulation_ = true ;
     dt_= 0.0;
     controllerRate_ = 0 ;
-    robot_ = r;
    //CONFIRM("create : [Controller_Base]");
   }
 
@@ -50,7 +49,6 @@ class ControllerBase: public RosNodeModuleBase
   {
     paramRead(this->nodeHandle_, "/simulation", isSimulation_);
     if (!isSimulation_) {
-      WARNING( "controller is running on real robot" );
     }
     paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
@@ -64,7 +62,7 @@ class ControllerBase: public RosNodeModuleBase
 
   virtual void publish()
   {
-    robot_->publish();
+    robot_.publish();
   }
 
 
@@ -80,6 +78,6 @@ class ControllerBase: public RosNodeModuleBase
   std::vector<ros::Publisher> publishers_;
   std::vector<ros::Subscriber> subscribers_;
 
-  Robot* robot_;
+  Robot& robot_;
 };
 }  // namespace estimator

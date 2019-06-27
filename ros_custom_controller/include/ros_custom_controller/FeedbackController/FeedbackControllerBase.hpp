@@ -17,8 +17,8 @@ template<typename Robot>
 class FeedbackControllerBase : public ControllerBase<Robot>
 {
  public:
-  FeedbackControllerBase(ros::NodeHandle* nodeHandle)
-      : ControllerBase<Robot>(nodeHandle),
+  FeedbackControllerBase(ros::NodeHandle* nodeHandle, Robot& robot)
+      : ControllerBase<Robot>(nodeHandle,robot),
         time_start_(0.0),
         time_stop_(0.0),
         time_start_ros_(0.0),
@@ -35,10 +35,10 @@ class FeedbackControllerBase : public ControllerBase<Robot>
   }
   ;
 
-  virtual void create(Robot* r) override
+  virtual void create() override
   {
-    ControllerBase<Robot>::create(r);
-    x_err_ = Eigen::VectorXd::Zero(this->robot_->getState().size());
+    ControllerBase<Robot>::create();
+    x_err_ = Eigen::VectorXd::Zero(this->robot_.getState().size());
    //CONFIRM("create : [Feedback_Controller_Base]");
   }
   ;
