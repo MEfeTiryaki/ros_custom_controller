@@ -74,7 +74,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   {
     paramRead(this->nodeHandle_, "/simulation", isSimulation_);
     if (!isSimulation_) {
-      WARNING("[RobotModuleContainerBase] : is running on real robot");
     }
    //CONFIRM("readParameters : [Robot_Module_Container_Base]");
   }
@@ -107,7 +106,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   virtual void shutdown() override
   {
     RosNodeModuleBase::shutdown();
-    setDesiredStateService_.shutdown();   
+    setDesiredStateService_.shutdown();
    //ERROR("shutdown : [Robot_module_container_base]");
   }
 
