@@ -171,7 +171,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   }
 
  protected:
-  bool controllerStopServiceCallback(std_srvs::SetBool::Request& request,
+  virtual bool controllerStopServiceCallback(std_srvs::SetBool::Request& request,
                                      std_srvs::SetBool::Response& response)
   {
     run_ = !request.data;
