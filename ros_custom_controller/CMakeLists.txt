@@ -5,36 +5,37 @@ add_definitions("-std=c++11")
 
 find_package(catkin REQUIRED
   COMPONENTS
-    ros_node_utils
-    ros_custom_estimator
-    robot_container
-    message_generation
-    std_msgs
-    ros_node_utils
-    roscpp
-    actionlib_msgs
-    actionlib
-    trajectory_msgs
+  	roscpp
+	std_msgs
+	trajectory_msgs
+	actionlib_msgs
+	actionlib
+	message_generation
+	ros_node_utils
+	robot_container
+	ros_custom_estimator
+	ooqp_catkin
+	ooqp_eigen_interface
 )
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 
 catkin_package(
 	INCLUDE_DIRS
-	  include
-	  ${EIGEN3_INCLUDE_DIR}
-	  ${boost_INCLUDE_DIR}
+		include
+		${EIGEN3_INCLUDE_DIR}
+		${boost_INCLUDE_DIR}
 	LIBRARIES
 	CATKIN_DEPENDS
-	  ros_node_utils
-    ros_custom_estimator
-    robot_container
-	  roscpp
-	  message_generation
-	  std_msgs
-    trajectory_msgs
-    actionlib_msgs
-	  #ooqp_eigen_interface
+		roscpp
+		std_msgs
+		trajectory_msgs
+		actionlib_msgs
+		message_generation
+		ros_node_utils
+		robot_container
+		ros_custom_estimator
+		ooqp_eigen_interface
 )
 
 include_directories(

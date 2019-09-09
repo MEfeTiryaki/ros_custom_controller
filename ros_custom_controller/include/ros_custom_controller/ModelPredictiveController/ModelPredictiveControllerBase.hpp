@@ -5,6 +5,7 @@
 #include <ctime>
 
 #include <Eigen/Core>
+
 #include "ooqp_eigen_interface/OoqpEigenInterface.hpp"
 
 namespace controller {
@@ -13,8 +14,8 @@ template<typename Robot>
 class ModelPredictiveControllerBase : public ControllerBase<Robot>
 {
  public:
-  ModelPredictiveControllerBase()
-      : ControllerBase<Robot>(),
+  ModelPredictiveControllerBase(ros::NodeHandle* nodeHandle, Robot& robot)
+      : ControllerBase<Robot>(nodeHandle, robot),
         horizonLength_(2),
         time_stop_(0.0),
         time_stop_ros_(0.0)
@@ -22,21 +23,19 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     time_start_ = clock();
     time_start_ros_ = ros::Time::now().toSec();
   }
-  ;
 
   virtual ~ModelPredictiveControllerBase()
   {
   }
-  ;
 
-  virtual void create(Robot* r) override
+  virtual void create() override
   {
-    ControllerBase<Robot>::create(r);
+    ControllerBase<Robot>::create();
     horizonLength_ = 0;
 
     // State Vectors
-    A_ = Eigen::MatrixXd::Zero(this->robot_->getN(), this->robot_->getN());
-    B_ = Eigen::MatrixXd::Zero(this->robot_->getN(), this->robot_->getM());
+    A_ = Eigen::MatrixXd::Zero(this->robot_.getN(), this->robot_.getN());
+    B_ = Eigen::MatrixXd::Zero(this->robot_.getN(), this->robot_.getM());
 
     // state constrains matrix and vector (A_*x<=b)
     A_x_ = Eigen::MatrixXd();
@@ -50,130 +49,56 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     //
 
   }
-  ;
 
-  virtual void initialize(ros::NodeHandle* nodeHandle) override
+  virtual void initialize() override
   {
-    ControllerBase<Robot>::initialize(nodeHandle);
+    ControllerBase<Robot>::initialize();
   }
 
   virtual void readParameters() override
   {
     ControllerBase<Robot>::readParameters();
-    int n = this->robot_->getN();
-    int m = this->robot_->getM();
+    int n = this->robot_.getN();
+    int m = this->robot_.getM();
 
     Eigen::MatrixXd P = Eigen::MatrixXd::Zero(n, n);
     Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(n, n);
     Eigen::MatrixXd R = Eigen::MatrixXd::Zero(m, m);
     double* ptr;
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/N")) {
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/N", horizonLength_);
-    } else {
-      ROS_INFO("The MPC horizon length couldn't be found");
-    }
-    this->robot_->setTrajectoryLength(horizonLength_);
+
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/N",
+                              horizonLength_);
+
+    this->robot_.setTrajectoryLength(horizonLength_);
     int N = horizonLength_;
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/P")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/P", value);
-      ptr = &value[0];
-      P.diagonal() << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC P Matrix couldn't be found");
-    }
+    CONFIRM("n : " + std::to_string(n));
+    CONFIRM("m : " + std::to_string(m));
+    CONFIRM("N : " + std::to_string(N));
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/Q")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/Q", value);
-      ptr = &value[0];
-      Q.diagonal() << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC Q Matrix couldn't be found");
-    }
-
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/R")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/R", value);
-      ptr = &value[0];
-      R.diagonal() << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC Q Matrix couldn't be found");
-    }
-
-    //
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/P", P);
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/Q", Q);
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/R", R);
     setCostMatrices(P, Q, R);
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/b_x")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/b_x", value);
-      ptr = &value[0];
-      b_x_ = Eigen::VectorXd(value.size());
-      b_x_ << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC b_x couldn't be found");
-    }
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/A_x")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/A_x", value);
-      ptr = &value[0];
-      A_x_ = Eigen::MatrixXd(value.size() / n, n);
-      A_x_ << Eigen::Map<Eigen::MatrixXd>(ptr, value.size() / n, n);
-    } else {
-      ROS_INFO("The MPC A_x couldn't be found");
-    }
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_x", b_x_);
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_x", A_x_, b_x_.size());
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_f", b_f_);
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_f", A_f_, b_f_.size());
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_u", b_u_);
+    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_u", A_u_, b_u_.size());
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/b_f")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/b_f", value);
-      ptr = &value[0];
-      b_f_ = Eigen::VectorXd(value.size());
-      b_f_ << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC b_f couldn't be found");
-    }
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/A_f")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/A_f", value);
-      ptr = &value[0];
-      A_f_ = Eigen::MatrixXd(value.size() / n, n);
-      A_f_ << Eigen::Map<Eigen::MatrixXd>(ptr, value.size() / n, n);
-    } else {
-      ROS_INFO("The MPC A_f couldn't be found");
-    }
 
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/b_u")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/b_u", value);
-      ptr = &value[0];
-      b_u_ = Eigen::VectorXd(value.size());
-      b_u_ << Eigen::Map<Eigen::VectorXd>(ptr, value.size());
-    } else {
-      ROS_INFO("The MPC b_u couldn't be found");
-    }
-
-    if (this->nodeHandle_->hasParam(this->ns_ + "/controller/MPC/A_u")) {
-      std::vector<double> value;
-      this->nodeHandle_->getParam(this->ns_ + "/controller/MPC/A_u", value);
-      ptr = &value[0];
-      A_u_ = Eigen::MatrixXd(value.size() / m, n);
-      A_u_ << Eigen::Map<Eigen::MatrixXd>(ptr, value.size() / m, m);
-    } else {
-      ROS_INFO("The MPC A_u couldn't be found");
-    }
-
-    //std::cerr << b_x_.transpose() << std::endl;
-    //std::cerr << A_x_ << std::endl;
-    //std::cerr << b_f_.transpose() << std::endl;
-    //std::cerr << A_f_ << std::endl;
-    //std::cerr << b_u_.transpose() << std::endl;
-    //std::cerr << A_u_ << std::endl;
+    std::cerr << b_x_.transpose() << std::endl;
+    std::cerr << A_x_ << std::endl;
+    std::cerr << b_f_.transpose() << std::endl;
+    std::cerr << A_f_ << std::endl;
+    std::cerr << b_u_.transpose() << std::endl;
+    std::cerr << A_u_ << std::endl;
 
   }
-  ;
 
   virtual void advance(double dt) override
   {
@@ -197,16 +122,16 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   {
     int n = P.cols();
     int m = R.cols();
-    Q_ = Eigen::MatrixXd::Identity(n * horizonLength_, n * horizonLength_);
+    this->Q_ = Eigen::MatrixXd::Identity(n * this->horizonLength_, n * this->horizonLength_);
+    this->R_ = Eigen::MatrixXd::Identity(m * this->horizonLength_, m * this->horizonLength_);
 
-    R_ = Eigen::MatrixXd::Identity(m * horizonLength_, m * horizonLength_);
-
-    for (int i = 0; i < horizonLength_; i++) {
-      Q_.block(i * n, i * n, n, n) = Q;
-      R_.block(i * m, i * m, m, m) = R;
+    for (int i = 0; i < this->horizonLength_; i++) {
+      this->Q_.block(i * n, i * n, n, n) = Q;
+      this->R_.block(i * m, i * m, m, m) = R;
     }
-    Q_.block(horizonLength_ - 1 * n, horizonLength_ - 1 * n, n, n) = P;
+    this->Q_.block((this->horizonLength_ - 1) * n, (this->horizonLength_ - 1) * n, n, n) = P;
   }
+
  protected:
 
   virtual void initializeCostMatrixes()
@@ -215,9 +140,10 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     int n_u = b_u_.size();
     int n_f = b_f_.size();
     int N = horizonLength_;
-    int n = this->robot_->getN();
-    int m = this->robot_->getM();
+    int n = this->robot_.getN();
+    int m = this->robot_.getM();
 
+    CONFIRM("1");
     Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(n, n);
 
     S_x_ = Eigen::MatrixXd::Zero(n * N, n);
@@ -229,6 +155,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     Eigen::MatrixXd E_lower = Eigen::MatrixXd::Zero(n_x * (N - 1) + n_f, n);
     Eigen::VectorXd w_lower = Eigen::VectorXd::Zero(n_x * (N - 1) + n_f);
 
+    CONFIRM("2");
     // S_X and S_u_
     for (int i = 0; i < N; i++) {
       // Matrix power
@@ -239,6 +166,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       S_x_.block(i * n, 0, n, n) = temp;
     }
 
+    CONFIRM("3");
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < i; j++) {
         // Matrix power
@@ -251,6 +179,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
 
       S_u_.block(i * n, i * m, n, m) = this->B_;
     }
+    CONFIRM("4");
 
     // UPPER PART OF Constrains
     for (int i = 0; i < N; i++) {
@@ -258,6 +187,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       w_upper.segment(i * n_u, n_u) = b_u_;
     }
 
+    CONFIRM("5");
     // LOWER PART OF CONSTRAINS
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < i; j++) {
@@ -266,14 +196,21 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       E_lower.block(i * n_x, 0, n_x, n) = -A_x_ * S_x_.block(i * n, 0, n, n);
       w_lower.segment(i * n_x, n_x) = b_x_;
     }
+
+    CONFIRM("6");
     for (int j = 0; j < N; j++) {
       G_lower.block((N - 1) * n_x, j * m, n_f, m) = A_f_ * S_u_.block((N - 1) * n, j * m, n, m);
     }
+
+    CONFIRM("7");
     E_lower.block((N - 1) * n_x, 0, n_f, E_lower.cols()) = -A_f_
         * S_x_.block((N - 1) * n, 0, n, S_x_.cols());
     w_lower.segment((N - 1) * n_x, n_x) = b_f_;
 
+    CONFIRM("8");
     Eigen::MatrixXd H = S_u_.transpose() * Q_ * S_u_ + R_;
+
+    CONFIRM("9");
     // Concatenate
     G_.resize(G_upper.rows() + G_lower.rows(), G_upper.cols());
     H_.resize(H.rows(), H.cols());
@@ -292,27 +229,24 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     H_ = H.sparseView();
     F_ = S_x_.transpose() * Q_ * S_u_;
 
-    /*
+    //*
      std::cerr << "Sx\n" << S_x_ << std::endl;
      std::cerr << "SU\n" << S_u_ << std::endl;
 
-     //std::cerr << "G_\n" << G_ << std::endl;
-     // std::cerr << "H_\n" << H_ << std::endl;
-     // std::cerr << "E_\n" << E_ << std::endl;
-     //std::cerr << "W_\n" << W_ << std::endl;
-     //std::cerr << "F_\n" << F_ << std::endl;
+     std::cerr << "G_\n" << G_ << std::endl;
+     std::cerr << "H_\n" << H_ << std::endl;
+     std::cerr << "E_\n" << E_ << std::endl;
+     std::cerr << "W_\n" << W_ << std::endl;
+     std::cerr << "F_\n" << F_ << std::endl;
      //*/
   }
 
-  ;
-
   virtual void calculateCostMatrixes()
   {
-    Eigen::VectorXd delta_x = this->robot_->getState() - this->robot_->getDesiredState();
+    Eigen::VectorXd delta_x = this->robot_.getState() - this->robot_.getDesiredState();
     q_ = delta_x.transpose() * F_;
     b_ = (W_ + E_ * delta_x);
   }
-  ;
 
   virtual void solveQuadraticOptimization()
   {
@@ -320,13 +254,12 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     ooqpei::OoqpEigenInterface::solve(H_, q_, G_, b_, solution_, true);
     //std::cout << "Time: " << (clock()-time_start_)/double(CLOCKS_PER_SEC) << " sec "<<std::endl;
   }
-  ;
 
   virtual void setCommand()
   {
-    this->robot_->setInput(solution_.segment(0, this->robot_->getM()));
+    this->robot_.setInput(solution_.segment(0, this->robot_.getM()));
   }
-  ;
+
  public:
   Eigen::MatrixXd getH()
   {
