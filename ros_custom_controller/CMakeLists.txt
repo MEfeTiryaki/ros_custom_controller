@@ -14,7 +14,7 @@ find_package(catkin REQUIRED
 	ros_node_utils
 	robot_container
 	ros_custom_estimator
-	ooqp_catkin
+	#ooqp_catkin
 	ooqp_eigen_interface
 )
 find_package(Eigen3 REQUIRED)
