@@ -66,7 +66,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     Eigen::MatrixXd R = Eigen::MatrixXd::Zero(m, m);
     double* ptr;
 
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/N",
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/N",
                               horizonLength_);
 
     this->robot_.setTrajectoryLength(horizonLength_);
@@ -76,18 +76,18 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     CONFIRM("m : " + std::to_string(m));
     CONFIRM("N : " + std::to_string(N));
 
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/P", P);
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/Q", Q);
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/R", R);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/P", P);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/Q", Q);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/R", R);
     setCostMatrices(P, Q, R);
 
 
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_x", b_x_);
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_x", A_x_, b_x_.size());
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_f", b_f_);
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_f", A_f_, b_f_.size());
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/b_u", b_u_);
-    ros_node_utils::paramRead(this->nodeHandle_, this->namespace_ + "/controller/MPC/A_u", A_u_, b_u_.size());
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/b_x", b_x_);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/A_x", A_x_, b_x_.size());
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/b_f", b_f_);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/A_f", A_f_, b_f_.size());
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/b_u", b_u_);
+    ros_node_utils::paramRead(this->nodeHandle_ , "/" + this->namespace_ + "/controller/MPC/A_u", A_u_, b_u_.size());
 
 
 

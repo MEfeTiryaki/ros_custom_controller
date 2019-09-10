@@ -119,7 +119,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     if (!setDesiredStateServiceName_.empty()) {
       // TODO Efe 24.05.2019 : setDesiredStateService should be general
       setDesiredStateService_ = this->nodeHandle_->advertiseService(
-          this->namespace_ + "/" + setDesiredStateServiceName_,
+        "/" +   this->namespace_ + "/" + setDesiredStateServiceName_,
           &RobotModuleContainerBase::setDesiredStateServiceCallback, this);
     }
   }

@@ -50,7 +50,7 @@ class ControllerBase: public RosNodeModuleBase
     paramRead(this->nodeHandle_, "/simulation", isSimulation_);
     if (!isSimulation_) {
     }
-    paramRead(this->nodeHandle_,this->namespace_ + "/controller/rate", controllerRate_);
+    paramRead(this->nodeHandle_, "/" + this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
    //CONFIRM("readParameters : [Controller_Base]");
   }

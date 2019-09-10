@@ -63,9 +63,6 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     dt_ = 1.0 / controllerRate_;
     this->rate_ = new ros::Rate(controllerRate_);
 
-    std::string data;
-    this->nodeHandle_->getParam(this->namespace_ + "/controller/services/stop/topic", data);
-    this->serviceNames_.push_back(data);
 
     hardwareAdapterFrame_->readParameters();
 
@@ -97,7 +94,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     // Controller Stop Service
 
     stopServices_ = this->nodeHandle_->advertiseService(
-        this->nodeName_ + "/" + this->serviceNames_[0],
+        "/" + this->namespace_ + "/controller/stop",
         &ControllerFrameBase::controllerStopServiceCallback, this);
 
     hardwareAdapterFrame_->initializeServices();
