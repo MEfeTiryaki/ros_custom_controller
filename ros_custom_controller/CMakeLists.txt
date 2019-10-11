@@ -46,15 +46,22 @@ include_directories(
 )
 
 
-#add_executable(controller_test
-#  test/test.cpp
-#)
-#add_dependencies(controller_test
-#  ${catkin_EXPORTED_TARGETS}
-#)
-#target_link_libraries(controller_test
-#  ${catkin_LIBRARIES}
-#)
+add_executable(controller_test
+  test/test.cpp
+)
+add_dependencies(controller_test
+  ${catkin_EXPORTED_TARGETS}
+)
+target_link_libraries(controller_test
+  ${catkin_LIBRARIES}
+  /usr/local/lib/libooqpgensparse.a
+  /usr/local/lib/libooqpsparse.a
+  /usr/local/lib/libooqpgondzio.a
+  /usr/local/lib/libooqpbase.a
+  /usr/local/lib/libma27.a
+  blas
+  gfortran
+)
 
 install(
   DIRECTORY include/${PROJECT_NAME}/
