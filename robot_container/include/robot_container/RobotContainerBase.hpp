@@ -19,7 +19,7 @@
 #include <Eigen/Dense>
 
 #include "ros_node_utils/RosNodeModuleBase.hpp"
-#include "ros_custom_hardware_adapter/HardwareAdapterFrameBase.hpp"
+#include "ros_custom_hardware_adapter/HardwareBase.hpp"
 
 using namespace ros_node_utils;
 
@@ -88,18 +88,18 @@ class RobotContainerBase : public RosNodeModuleBase
   virtual void advance(double dt)
   {
   }
-  ;
+
 
   virtual void publish()
   {
   }
-  ;
+
 
   virtual void setTimeStep(double dt)
   {
     dt_ = dt;
   }
-  ;
+  
 
  protected:
 

@@ -14,6 +14,7 @@
 #include "std_msgs/Float64MultiArray.h"
 
 #include "robot_container/SetState.h"
+#include "robot_container/RobotContainerBase.hpp"
 
 using namespace ros_node_utils;
 namespace robot {
@@ -39,15 +40,17 @@ class RobotModuleContainerBase : public RosNodeModuleBase
    * @details
    * @param[in] nodeHandle pointer to the nodeHandle
    */
-  RobotModuleContainerBase(ros::NodeHandle* nodeHandle)
-      : RosNodeModuleBase(nodeHandle),
-        n_(0),
-        m_(0),
-        trajectoryLength_(2),
-        dt_(0.0),
-        isSimulation_(false),
-        stateMutex_(new std::mutex()),
-        trajectoryMutex_(new std::mutex())
+  RobotModuleContainerBase(ros::NodeHandle *nodeHandle,RobotContainerBase& parent)
+      :
+      RosNodeModuleBase(nodeHandle),
+      parent_(parent),
+      n_(0),
+      m_(0),
+      trajectoryLength_(2),
+      dt_(0.0),
+      isSimulation_(false),
+      stateMutex_(new std::mutex()),
+      trajectoryMutex_(new std::mutex())
   {
   }
 
@@ -64,7 +67,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   virtual void create() override
   {
     RosNodeModuleBase::create();
-   //CONFIRM("create : [Robot_Module_Container_Base]");
+    //CONFIRM("create : [Robot_Module_Container_Base]");
   }
   /*! \~english
    * @brief read ros parameters
@@ -75,7 +78,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     paramRead(this->nodeHandle_, "/simulation", isSimulation_);
     if (!isSimulation_) {
     }
-   //CONFIRM("readParameters : [Robot_Module_Container_Base]");
   }
 
   /*! \~english
@@ -96,7 +98,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     for (int i = 0; i < trajectoryLength_; i++) {
       x_trajectory_[i] = Eigen::VectorXd::Zero(n_);
     }
-   //CONFIRM("initialize : [Robot_Module_Container_Base]");
   }
 
   /*! \~english
@@ -106,23 +107,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   virtual void shutdown() override
   {
     RosNodeModuleBase::shutdown();
-    setDesiredStateService_.shutdown();
-   //ERROR("shutdown : [Robot_module_container_base]");
   }
 
-  /*! \~english
-   * @brief initialize services
-   * @details initialize set desired state service
-   */
-  virtual void initializeServices() override
-  {
-    if (!setDesiredStateServiceName_.empty()) {
-      // TODO Efe 24.05.2019 : setDesiredStateService should be general
-      setDesiredStateService_ = this->nodeHandle_->advertiseService(
-        "/" +   this->namespace_ + "/" + setDesiredStateServiceName_,
-          &RobotModuleContainerBase::setDesiredStateServiceCallback, this);
-    }
-  }
 
   /*! \~english
    * @brief advance robot module in each control step
@@ -162,7 +148,7 @@ class RobotModuleContainerBase : public RosNodeModuleBase
 
     // Checks whether buffer is empty  or not
     if (!isBufferEmpty()) {
-      TrajectoryPoint& next = trajectoryBuffer_[0];
+      TrajectoryPoint &next = trajectoryBuffer_[0];
       // Checks time left for the next trajectory buffer point
       if (next.timeLeft > 0.0) {
         // interpolation
@@ -240,7 +226,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return stateMutex_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+   * \~english
    * @brief setter for state
    * @details
    */
@@ -258,7 +245,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return x_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for desired state
    * @details
    */
@@ -267,7 +255,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     x_des_ = x_des;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for desired state
    * @details
    */
@@ -276,7 +265,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return x_des_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for input
    * @details
    */
@@ -285,7 +275,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     u_ = u;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for input
    * @details
    */
@@ -330,8 +321,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return m_;
   }
 
-
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for trajectory mutex
    * @details
    */
@@ -340,7 +331,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return trajectoryMutex_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for trajectory length
    * @details
    */
@@ -353,7 +345,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     }
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for trajectory length
    * @details
    */
@@ -362,7 +355,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return trajectoryLength_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for trajectory
    * @details
    */
@@ -371,7 +365,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     x_trajectory_ = trajectory;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for trajectory
    * @details
    */
@@ -380,7 +375,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return x_trajectory_;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for i^th trajectory trajectory point
    * @details
    */
@@ -388,7 +384,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   {
     return x_trajectory_[i];
   }
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for trajectory buffer
    * @details TODO
    */
@@ -397,7 +394,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     trajectoryBuffer_ = trajectory;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief setter for trajectory buffer
    * @details TODO
    */
@@ -406,7 +404,8 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     trajectoryBuffer_[i] = value;
   }
 
-  /*! \~english
+  /*! TODO: GET-RID OF
+    \~english
    * @brief getter for trajectory buffer
    * @details TODO
    */
@@ -415,21 +414,23 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return trajectoryBuffer_;
   }
 
-  // CALLBACKS
- protected:
-
-  virtual bool setDesiredStateServiceCallback(robot_container::SetState::Request& request,
-                                              robot_container::SetState::Response& response)
+  RobotContainerBase& getParentRobot()
   {
-    std::lock_guard<std::mutex> lock(*this->trajectoryMutex_);
-    ERROR("Robot Module Container set desired state!!");
-    return true;
+    return parent_;
   }
+
+  void setParentRobot(RobotContainerBase &parent)
+  {
+    parent_ = parent;
+  }
+
 
   // VARIABLES
  protected:
-  std::mutex* stateMutex_;
-  std::mutex* trajectoryMutex_;
+  std::mutex *stateMutex_;
+  std::mutex *trajectoryMutex_;
+
+  RobotContainerBase &parent_;
 
   double dt_;
   bool isSimulation_;
@@ -445,9 +446,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   std::vector<TrajectoryPoint> trajectoryBuffer_;
 
 
-
-  ros::ServiceServer setDesiredStateService_;
-  std::string setDesiredStateServiceName_;
 
 };
 }
