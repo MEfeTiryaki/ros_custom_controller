@@ -155,8 +155,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     Eigen::MatrixXd E_lower = Eigen::MatrixXd::Zero(n_x * (N - 1) + n_f, n);
     Eigen::VectorXd w_lower = Eigen::VectorXd::Zero(n_x * (N - 1) + n_f);
 
-    CONFIRM("2");
-    // S_X and S_u_
+      // S_X and S_u_
     for (int i = 0; i < N; i++) {
       // Matrix power
       temp = A_;
@@ -166,7 +165,6 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       S_x_.block(i * n, 0, n, n) = temp;
     }
 
-    CONFIRM("3");
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < i; j++) {
         // Matrix power
@@ -179,7 +177,6 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
 
       S_u_.block(i * n, i * m, n, m) = this->B_;
     }
-    CONFIRM("4");
 
     // UPPER PART OF Constrains
     for (int i = 0; i < N; i++) {
@@ -187,8 +184,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       w_upper.segment(i * n_u, n_u) = b_u_;
     }
 
-    CONFIRM("5");
-    // LOWER PART OF CONSTRAINS
+      // LOWER PART OF CONSTRAINS
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < i; j++) {
         G_lower.block(i * n_x, j * m, n_x, m) = A_x_ * S_u_.block(i * n, j * m, n, m);
@@ -197,20 +193,16 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
       w_lower.segment(i * n_x, n_x) = b_x_;
     }
 
-    CONFIRM("6");
     for (int j = 0; j < N; j++) {
       G_lower.block((N - 1) * n_x, j * m, n_f, m) = A_f_ * S_u_.block((N - 1) * n, j * m, n, m);
     }
 
-    CONFIRM("7");
     E_lower.block((N - 1) * n_x, 0, n_f, E_lower.cols()) = -A_f_
         * S_x_.block((N - 1) * n, 0, n, S_x_.cols());
     w_lower.segment((N - 1) * n_x, n_x) = b_f_;
 
-    CONFIRM("8");
     Eigen::MatrixXd H = S_u_.transpose() * Q_ * S_u_ + R_;
 
-    CONFIRM("9");
     // Concatenate
     G_.resize(G_upper.rows() + G_lower.rows(), G_upper.cols());
     H_.resize(H.rows(), H.cols());
@@ -229,7 +221,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
     H_ = H.sparseView();
     F_ = S_x_.transpose() * Q_ * S_u_;
 
-    //*
+    /*
      std::cerr << "Sx\n" << S_x_ << std::endl;
      std::cerr << "SU\n" << S_u_ << std::endl;
 
@@ -250,9 +242,9 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
 
   virtual void solveQuadraticOptimization()
   {
-    //time_start_ = clock();
+    time_start_ = clock();
     ooqpei::OoqpEigenInterface::solve(H_, q_, G_, b_, solution_, true);
-    //std::cout << "Time: " << (clock()-time_start_)/double(CLOCKS_PER_SEC) << " sec "<<std::endl;
+    std::cout << "Time: " << (clock()-time_start_)/double(CLOCKS_PER_SEC) << " sec "<<std::endl;
   }
 
   virtual void setCommand()
@@ -348,7 +340,7 @@ class ModelPredictiveControllerBase : public ControllerBase<Robot>
   Eigen::SparseMatrix<double, Eigen::RowMajor> G_;
 //Eigen::MatrixXd G_;
   Eigen::MatrixXd E_;
-  Eigen::MatrixXd W_;
+  Eigen::VectorXd W_;
 
   Eigen::SparseMatrix<double, Eigen::RowMajor> H_;
 //Eigen::MatrixXd H_;

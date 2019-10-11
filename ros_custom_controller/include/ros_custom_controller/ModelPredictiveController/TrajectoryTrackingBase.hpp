@@ -18,18 +18,18 @@ class TrajectoryTrackingBase : public ModelPredictiveControllerBase<Robot>
       : ModelPredictiveControllerBase<Robot>()
   {
   }
-  ;
+
 
   virtual ~TrajectoryTrackingBase()
   {
   }
-  ;
+
 
   virtual void create(Robot* r) override
   {
     ModelPredictiveControllerBase<Robot>::create(r);
   }
-  ;
+  
 
   virtual void initialize(ros::NodeHandle* nodeHandle) override
   {
@@ -40,7 +40,7 @@ class TrajectoryTrackingBase : public ModelPredictiveControllerBase<Robot>
   {
     ModelPredictiveControllerBase<Robot>::readParameters();
   }
-  ;
+
   virtual void setCostMatrices(Eigen::MatrixXd P, Eigen::MatrixXd Q, Eigen::MatrixXd R) override
   {
     int n = P.cols();
@@ -152,7 +152,7 @@ class TrajectoryTrackingBase : public ModelPredictiveControllerBase<Robot>
     //std::cerr << "F_\n" << this->F_ << std::endl;
     //*/
   }
-  ;
+
 
   virtual void calculateCostMatrixes() override
   {
@@ -171,13 +171,13 @@ class TrajectoryTrackingBase : public ModelPredictiveControllerBase<Robot>
     // Constraint
     this->b_ = this->W_ + this->E_ * x + this->E_s_ * x_s;
   }
-  ;
+
 
   virtual void setCommand() override
   {
     this->robot_->setInput( this->solution_.segment(0, this->robot_->getM()));
   }
-  ;
+
 
  public:
   Eigen::MatrixXd getAbar()

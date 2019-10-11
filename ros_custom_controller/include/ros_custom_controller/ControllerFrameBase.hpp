@@ -18,7 +18,7 @@
 #include <std_srvs/SetBool.h>
 #include "robot_container/RobotContainerBase.hpp"
 #include "ros_custom_estimator/EstimatorBase.hpp"
-#include "ros_custom_hardware_adapter/HardwareAdapterFrameBase.hpp"
+#include "ros_custom_hardware_adapter/HardwareBase.hpp"
 
 namespace controller {
 template<typename Robot>
@@ -33,7 +33,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
         dt_(0.0),
         robot_(),
         stateEstimator_(),
-        hardwareAdapterFrame_(),
+        hardware_(),
         controllerThread_()
   {
   }
@@ -58,13 +58,12 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   virtual void readParameters() override
   {
     RosNodeModuleBase::readParameters();
-    this->nodeHandle_->getParam("/simulation", isSimulation_);
-    this->nodeHandle_->getParam(this->namespace_ + "/controller/rate", controllerRate_);
+    paramRead(getNodeHandle(), "/simulation", isSimulation_);
+    paramRead(getNodeHandle(), "/" + this->namespace_ + "/controller/rate", controllerRate_);
     dt_ = 1.0 / controllerRate_;
     this->rate_ = new ros::Rate(controllerRate_);
 
-
-    hardwareAdapterFrame_->readParameters();
+    hardware_->readParameters();
 
     robot_->readParameters();
 
@@ -74,7 +73,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   virtual void initializePublishers() override
   {
     RosNodeModuleBase::initializePublishers();
-    hardwareAdapterFrame_->initializePublishers();
+    hardware_->initializePublishers();
     robot_->initializePublishers();
     stateEstimator_->initializePublishers();
 
@@ -83,7 +82,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   virtual void initializeSubscribers() override
   {
     RosNodeModuleBase::initializeSubscribers();
-    hardwareAdapterFrame_->initializeSubscribers();
+    hardware_->initializeSubscribers();
     robot_->initializeSubscribers();
     stateEstimator_->initializeSubscribers();
   }
@@ -97,7 +96,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
         "/" + this->namespace_ + "/controller/stop",
         &ControllerFrameBase::controllerStopServiceCallback, this);
 
-    hardwareAdapterFrame_->initializeServices();
+    hardware_->initializeServices();
     robot_->initializeServices();
     stateEstimator_->initializeServices();
   }
@@ -105,7 +104,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   virtual void initialize() override
   {
     RosNodeModuleBase::initialize();
-    hardwareAdapterFrame_->initialize();
+    hardware_->initialize();
     robot_->initialize();
     stateEstimator_->initialize();
   }
@@ -116,18 +115,18 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     RosNodeModuleBase::shutdown();
     stop();
     stopServices_.shutdown();
-    hardwareAdapterFrame_->shutdown();
+    hardware_->shutdown();
     robot_->shutdown();
     stateEstimator_->shutdown();
 
     int i = 0;
-    while (!(hardwareAdapterFrame_->isTerminated() && stateEstimator_->isTerminated())) {
+    while (!(hardware_->isTerminated() && stateEstimator_->isTerminated())) {
     }
 
-    hardwareAdapterFrame_->clean();
+    hardware_->clean();
     stateEstimator_->clean();
 
-    hardwareAdapterFrame_.reset();
+    hardware_.reset();
     stateEstimator_.reset();
 
     robot_.reset();
@@ -193,6 +192,6 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
 
   std::unique_ptr<Robot> robot_;
   std::unique_ptr<estimator::EstimatorBase> stateEstimator_;
-  std::unique_ptr<hardware_adapter::HardwareAdapterFrameBase> hardwareAdapterFrame_;
+  std::unique_ptr<hardware_adapter::HardwareBase> hardware_;
 };
 }  // namespace estimator
