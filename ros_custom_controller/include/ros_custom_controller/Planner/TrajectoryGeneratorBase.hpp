@@ -8,67 +8,48 @@
 
 #pragma once
 
-#include <string>
 #include "robot_container/RobotModuleContainerBase.hpp"
 #include "ros_node_utils/RosNodeModuleBase.hpp"
+#include <string>
 
-template<typename Robot>
-class TrajectoryGeneratorBase : public RosNodeModuleBase
-{
- public:
+template <typename Robot>
+class TrajectoryGeneratorBase : public RosNodeModuleBase {
+public:
   TrajectoryGeneratorBase(ros::NodeHandle *nodeHandle, Robot &robot)
-      :
-      RosNodeModuleBase(nodeHandle),
-      robot_(robot),
-      name_("trajectory_generator_base"),
-      referencePointChanged_(false)
-  {
+      : RosNodeModuleBase(nodeHandle), robot_(robot),
+        name_("trajectory_generator_base"), referencePointChanged_(false) {}
+  virtual ~TrajectoryGeneratorBase() {}
 
-  }
-  virtual ~TrajectoryGeneratorBase()
-  {
+  std::string getName() { return name_; }
 
-  }
+  virtual bool isReferenceChanged() { return referencePointChanged_; }
 
-  std::string getName()
-  {
-    return name_;
-  }
+  virtual void advance(double dt) {}
 
-  virtual bool isReferenceChanged()
-  {
-    return referencePointChanged_;
-  }
+  virtual void publish() {}
 
-  virtual void advance(double dt)
-  {
-
-  }
-
-  virtual void publish(){
-
-  }
-
-  virtual Eigen::Vector3d getDesiredPositionInWorldFrame()
-  {
+  virtual Eigen::Vector3d getDesiredPositionInWorldFrame() {
     return Eigen::Vector3d::Zero();
   }
 
-  virtual Eigen::Quaterniond getDesiredOrientationInWorldFrame()
-  {
+  virtual Eigen::Quaterniond getDesiredOrientationInWorldFrame() {
     return Eigen::Quaterniond(1, 0, 0, 0);
   }
 
-  virtual Eigen::Vector3d getDesiredLinearVelocityInWorldFrame()
-  {
+  virtual Eigen::Vector3d getDesiredLinearVelocityInWorldFrame() {
     return Eigen::Vector3d::Zero();
   }
 
-  virtual Eigen::Vector3d getDesiredAngularVelocityInWorldFrame()
-  {
+  virtual Eigen::Vector3d getDesiredAngularVelocityInWorldFrame() {
     return Eigen::Vector3d::Zero();
   }
- protected:
+
+  virtual std::vector<Eigen::VectorXd> getTrajectory(int stepNumber,
+                                                     double timeStep) {
+    return std::vector<Eigen::VectorXd>(0);
+  }
+
+protected:
   std::string name_;
   Robot &robot_;
 
