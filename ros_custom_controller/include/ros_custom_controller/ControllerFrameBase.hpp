@@ -32,8 +32,6 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
         run_(false),
         dt_(0.0),
         robot_(),
-        stateEstimator_(),
-        hardware_(),
         controllerThread_()
   {
   }
@@ -63,28 +61,22 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     dt_ = 1.0 / controllerRate_;
     this->rate_ = new ros::Rate(controllerRate_);
 
-    hardware_->readParameters();
 
     robot_->readParameters();
 
-    stateEstimator_->readParameters();
   }
 
   virtual void initializePublishers() override
   {
     RosNodeModuleBase::initializePublishers();
-    hardware_->initializePublishers();
     robot_->initializePublishers();
-    stateEstimator_->initializePublishers();
 
   }
 
   virtual void initializeSubscribers() override
   {
     RosNodeModuleBase::initializeSubscribers();
-    hardware_->initializeSubscribers();
     robot_->initializeSubscribers();
-    stateEstimator_->initializeSubscribers();
   }
 
   virtual void initializeServices() override
@@ -96,17 +88,13 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
         "/" + this->namespace_ + "/controller/stop",
         &ControllerFrameBase::controllerStopServiceCallback, this);
 
-    hardware_->initializeServices();
     robot_->initializeServices();
-    stateEstimator_->initializeServices();
   }
 
   virtual void initialize() override
   {
     RosNodeModuleBase::initialize();
-    hardware_->initialize();
     robot_->initialize();
-    stateEstimator_->initialize();
   }
 
   virtual void shutdown() override
@@ -115,19 +103,13 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     RosNodeModuleBase::shutdown();
     stop();
     stopServices_.shutdown();
-    hardware_->shutdown();
     robot_->shutdown();
-    stateEstimator_->shutdown();
 
-    int i = 0;
-    while (!(hardware_->isTerminated() && stateEstimator_->isTerminated())) {
-    }
+    // int i = 0;
+    // while (!(hardware_->isTerminated() && stateEstimator_->isTerminated())) {
+    // }
 
-    hardware_->clean();
-    stateEstimator_->clean();
 
-    hardware_.reset();
-    stateEstimator_.reset();
 
     robot_.reset();
   }
@@ -171,7 +153,6 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
                                      std_srvs::SetBool::Response& response)
   {
     run_ = !request.data;
-    stateEstimator_->setRun(run_);
     response.success = true;
     return true;
   }
@@ -191,7 +172,5 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
   bool run_;
 
   std::unique_ptr<Robot> robot_;
-  std::unique_ptr<estimator::EstimatorBase> stateEstimator_;
-  std::unique_ptr<hardware_adapter::HardwareBase> hardware_;
 };
 }  // namespace estimator
