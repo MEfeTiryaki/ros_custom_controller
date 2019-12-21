@@ -16,6 +16,8 @@
   <depend>message_generation</depend>
 
   <depend>boost</depend>
+  <depend>actionlib</depend>
+
 
 
   <!--depend>ooqp_eigen_interface</depend-->

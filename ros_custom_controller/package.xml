@@ -21,7 +21,7 @@
 
 	<depend>boost</depend>
 
-	<depend>ooqp_eigen_interface</depend>
+	<!-- <depend>ooqp_eigen_interface</depend> -->
 	<!--depend>ooqp_catkin</depend-->
 
 </package>
