@@ -40,10 +40,9 @@ class RobotModuleContainerBase : public RosNodeModuleBase
    * @details
    * @param[in] nodeHandle pointer to the nodeHandle
    */
-  RobotModuleContainerBase(ros::NodeHandle *nodeHandle,RobotContainerBase& parent)
+  RobotModuleContainerBase(ros::NodeHandle *nodeHandle)
       :
       RosNodeModuleBase(nodeHandle),
-      parent_(parent),
       n_(0),
       m_(0),
       trajectoryLength_(2),
@@ -414,15 +413,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
     return trajectoryBuffer_;
   }
 
-  RobotContainerBase& getParentRobot()
-  {
-    return parent_;
-  }
-
-  void setParentRobot(RobotContainerBase &parent)
-  {
-    parent_ = parent;
-  }
 
 
   // VARIABLES
@@ -430,7 +420,6 @@ class RobotModuleContainerBase : public RosNodeModuleBase
   std::mutex *stateMutex_;
   std::mutex *trajectoryMutex_;
 
-  RobotContainerBase &parent_;
 
   double dt_;
   bool isSimulation_;
