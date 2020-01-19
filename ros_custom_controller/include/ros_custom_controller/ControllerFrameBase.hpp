@@ -103,15 +103,7 @@ class ControllerFrameBase : public ros_node_utils::RosNodeModuleBase
     RosNodeModuleBase::shutdown();
     stop();
     stopServices_.shutdown();
-    robot_->shutdown();
 
-    // int i = 0;
-    // while (!(hardware_->isTerminated() && stateEstimator_->isTerminated())) {
-    // }
-
-
-
-    robot_.reset();
   }
 
   virtual void advance(double dt)
