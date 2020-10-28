@@ -148,6 +148,14 @@ public:
       return Eigen::Vector3d::Zero();
   }
 
+  Eigen::VectorXd getDesiredStateInWorldFrame(){
+      if (generatorId_ >= 0)
+      return trajectoryGenerators_[generatorId_]
+          ->getDesiredStateInWorldFrame();
+    else
+      return Eigen::VectorXd::Zero(0);
+  }
+
   /*! \~english
    * @brief calculates the trajectory for given stepNumber
    * @details

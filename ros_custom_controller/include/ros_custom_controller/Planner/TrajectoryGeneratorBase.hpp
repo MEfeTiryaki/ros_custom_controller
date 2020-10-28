@@ -44,6 +44,10 @@ public:
     return Eigen::Vector3d::Zero();
   }
 
+  virtual Eigen::VectorXd getDesiredStateInWorldFrame(){
+    return Eigen::Vector3d::Zero();
+  }
+
   virtual std::vector<Eigen::VectorXd> getTrajectory(int stepNumber,
                                                      double timeStep) {
     return std::vector<Eigen::VectorXd>(0);
