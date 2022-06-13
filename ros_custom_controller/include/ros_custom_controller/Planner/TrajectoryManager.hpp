@@ -128,7 +128,7 @@ public:
 
     if (generatorId_ >= 0)
       return trajectoryGenerators_[generatorId_]
-          ->getDesiredOrietationInWorldFrame();
+          ->getDesiredOrientationInWorldFrame();
     else
       return Eigen::Quaterniond(1, 0, 0, 0);
   }
